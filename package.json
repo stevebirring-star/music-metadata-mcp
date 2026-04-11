@@ -1,0 +1,40 @@
+{
+  "name": "music-metadata-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for the Music Metadata API — lets AI assistants look up BPM, key, mood, genre and 17 audio features by track name. Drop-in Spotify audio-features replacement for AI workflows.",
+  "type": "module",
+  "bin": {
+    "music-metadata-mcp": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "README.md"
+  ],
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.10.2"
+  },
+  "keywords": [
+    "mcp",
+    "music",
+    "bpm",
+    "audio-features",
+    "spotify",
+    "model-context-protocol",
+    "claude",
+    "ai",
+    "music-metadata"
+  ],
+  "author": "FreqBlog <hello@freqblog.com>",
+  "license": "MIT",
+  "homepage": "https://freqblog.com/music-api.html",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stevebirring-star/music-metadata-api.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
