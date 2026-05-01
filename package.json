@@ -1,7 +1,7 @@
 {
   "name": "music-metadata-mcp",
-  "version": "1.0.0",
-  "description": "MCP server for the Music Metadata API — lets AI assistants look up BPM, key, mood, genre and 17 audio features by track name. Drop-in Spotify audio-features replacement for AI workflows.",
+  "version": "2.0.1",
+  "description": "MCP server for the FreqBlog Music API — 17 tools covering audio features, recommendations, harmonic radio, DJ-format export (Rekordbox/M3U/cuesheet), country charts, lyrics, waveforms and more. Drop-in Spotify audio-features replacement for AI workflows.",
   "type": "module",
   "bin": {
     "music-metadata-mcp": "./index.js"
@@ -25,7 +25,14 @@
     "model-context-protocol",
     "claude",
     "ai",
-    "music-metadata"
+    "music-metadata",
+    "dj",
+    "rekordbox",
+    "lyrics",
+    "waveform",
+    "recommendation",
+    "harmonic-mixing",
+    "camelot"
   ],
   "author": "FreqBlog <hello@freqblog.com>",
   "license": "MIT",

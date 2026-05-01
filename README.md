@@ -1,21 +1,47 @@
 # music-metadata-mcp
 
-MCP server for the [Music Metadata API](https://freqblog.com/music-api.html).
+MCP server for the [FreqBlog Music API](https://freqblog.com/music-api.html).
 
-Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up BPM, musical key, mood, genre, and 17 audio features by track name — no Spotify account, no ISRC required.
+Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio features, build harmonic playlists, identify recordings, fetch lyrics, render waveforms, and export DJ-ready files — by track name. No Spotify account, no ISRC required.
 
-## Tools
+## Tools (v2.0.0 — 17 total)
 
+### Core lookup
 | Tool | Description |
 |------|-------------|
-| `lookup_track` | Get BPM, key, mood, genre, danceability, energy and more for any track. Covers 24,000+ pre-analyzed tracks + 7.5M fallback via MusicBrainz |
+| `lookup_track` | BPM, key, mood, genre, danceability, energy and 30+ more for any track. Covers 47k+ pre-analyzed tracks + 7.5M fallback via MusicBrainz |
+| `search_tracks` | Full-text search across the catalog (FTS5-backed) |
+| `bulk_lookup` | Look up up to 50 tracks in one request |
 | `find_tracks_by_bpm` | Find tracks within ±tolerance of a target BPM |
 | `find_tracks_by_key` | Find tracks by key — Camelot (8A), Open Key (1m), or name (A-Minor) |
-| `bulk_lookup` | Look up up to 50 tracks in one request |
+
+### Recommendations & DJ tools
+| Tool | Description |
+|------|-------------|
+| `find_similar_tracks` | Cosine-similarity recommendation engine over the entire catalog |
+| `build_radio_playlist` | Harmonic + BPM-continuity DJ playlist from a seed track |
+| `export_playlist` | Generate Rekordbox XML / M3U / cuesheet from a list of track ids |
+| `country_chart` | Live national music chart for 46 countries (Apple Music RSS) |
+| `harmonic_keys` | Camelot wheel adjacency — pure logic, no quota |
+
+### Browse
+| Tool | Description |
+|------|-------------|
+| `find_artist_tracks` | List every catalog track for an artist (paginated) |
+| `list_genres` | Distinct genre tags with track counts |
+| `tracks_in_genre` | List tracks tagged with a genre |
+
+### Per-track extras
+| Tool | Description |
+|------|-------------|
+| `track_embedding` | 18-dim numeric vector for ML / similarity / clustering |
+| `track_artwork_url` | Resolved cover-art image URL (iTunes / Cover Art Archive) |
+| `track_lyrics` | Synced + plain lyrics via the open LRClib dataset |
+| `track_waveform_svg` | SVG waveform render of the track's 30-second preview |
 
 ## Quick Start
 
-Get a free API key at [freqblog.com/music-api.html](https://freqblog.com/music-api.html) (500 req/month free).
+Get a free API key at [freqblog.com/music-api.html](https://freqblog.com/music-api.html) (1,000 req/month free).
 
 ### Claude Desktop
 
@@ -67,10 +93,10 @@ Once connected, you can ask your AI:
 
 | Plan | Price | Requests/month |
 |------|-------|---------------|
-| Free | £0 | 500 |
-| Hobbyist | £9.99/mo | 3,000 |
-| Starter | £39/mo | 20,000 |
-| Professional | £129/mo | 150,000 |
+| Free | £0 | 1,000 |
+| Hobbyist | £9.99/mo | 15,000 |
+| Starter | £39/mo | 150,000 |
+| Professional | £129/mo | 750,000 |
 
 [Get your key →](https://freqblog.com/music-api.html)
 
