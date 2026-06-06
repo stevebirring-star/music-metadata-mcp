@@ -2,14 +2,14 @@
 
 MCP server for the [FreqBlog Music API](https://freqblog.com/music-api.html).
 
-Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio features, build harmonic playlists, identify recordings, fetch lyrics, render waveforms, and export DJ-ready files — by track name. No Spotify account, no ISRC required.
+Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio features, build harmonic playlists, fetch lyrics, render waveforms, and export DJ-ready files — by track name, ISRC, MusicBrainz ID, or Spotify track ID. No Spotify account required; a track name alone works (no ISRC needed).
 
-## Tools (v2.0.0 — 17 total)
+## Tools (v2.1.0 — 17 total)
 
 ### Core lookup
 | Tool | Description |
 |------|-------------|
-| `lookup_track` | BPM, key, mood, genre, danceability, energy and 30+ more for any track. Covers 47k+ pre-analyzed tracks + 7.5M fallback via MusicBrainz |
+| `lookup_track` | BPM, key, mood, genre, danceability, energy and 30+ more — by track name (+ optional artist), ISRC, MusicBrainz ID, or Spotify track ID. Covers 270k+ pre-analyzed tracks + 7.5M fallback via MusicBrainz/AcousticBrainz |
 | `search_tracks` | Full-text search across the catalog (FTS5-backed) |
 | `bulk_lookup` | Look up up to 50 tracks in one request |
 | `find_tracks_by_bpm` | Find tracks within ±tolerance of a target BPM |
@@ -21,7 +21,7 @@ Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio
 | `find_similar_tracks` | Cosine-similarity recommendation engine over the entire catalog |
 | `build_radio_playlist` | Harmonic + BPM-continuity DJ playlist from a seed track |
 | `export_playlist` | Generate Rekordbox XML / M3U / cuesheet from a list of track ids |
-| `country_chart` | Live national music chart for 46 countries (Apple Music RSS) |
+| `country_chart` | Live national music chart for 45 countries (Apple Music RSS) |
 | `harmonic_keys` | Camelot wheel adjacency — pure logic, no quota |
 
 ### Browse
@@ -88,6 +88,7 @@ Once connected, you can ask your AI:
 - *"Find me 10 tracks in A-Minor around 128 BPM"*
 - *"What's the mood and genre of Come to Daddy by Aphex Twin?"*
 - *"Look up the audio features for these 5 tracks: ..."*
+- *"Get the audio features for ISRC USUM71900001"* — also works with a MusicBrainz recording ID or a Spotify track ID
 
 ## API key tiers
 
