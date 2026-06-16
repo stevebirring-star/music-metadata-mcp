@@ -142,8 +142,12 @@ server.registerTool(
       "Look up audio features for a track — BPM, musical key, mood, genre, danceability, " +
       "energy, acousticness, instrumentalness and 30+ more. Provide exactly ONE of: a track " +
       "name (optionally with artist), an ISRC, a MusicBrainz recording ID (mbid), or a Spotify " +
-      "track ID. Covers 270,000+ pre-analyzed tracks (instant) plus 7.5M+ via MusicBrainz + " +
-      "AcousticBrainz fallback; an unknown track name queues an on-demand analysis. " +
+      "track ID. For reliable coverage, identify by track name (+artist) or ISRC: a name miss " +
+      "queues an on-demand fetch + analysis so even tracks not yet in the catalog get ingested " +
+      "and returned shortly. A raw Spotify ID resolves ONLY tracks already mapped to a Spotify " +
+      "ID — a minority of the catalog (~2.4%) — not as a universal Spotify-ID reverse lookup. " +
+      "Covers 270,000+ pre-analyzed tracks (instant) plus 7.5M+ via MusicBrainz + " +
+      "AcousticBrainz fallback. " +
       "Drop-in replacement for Spotify audio-features.",
     inputSchema: {
       track: z
@@ -171,7 +175,7 @@ server.registerTool(
         .string()
         .max(80)
         .optional()
-        .describe("Spotify track ID (also accepts a spotify:track: URI or an open.spotify.com URL). Works for tracks already in the catalog."),
+        .describe("Spotify track ID (also accepts a spotify:track: URI or an open.spotify.com URL). Resolves ONLY tracks already mapped to a Spotify ID — a minority of the catalog (~2.4%) — so it is not a universal Spotify-ID reverse lookup and will 404 on unmapped IDs. For reliable coverage, look up by `track` (+ `artist`) or by `isrc` instead; if your own Spotify app already gives you the track's external_ids.isrc, pass that as `isrc`."),
     },
   },
   async ({ track, artist, isrc, mbid, spotify_id }) => {

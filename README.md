@@ -2,14 +2,14 @@
 
 MCP server for the [FreqBlog Music API](https://freqblog.com/music-api.html).
 
-Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio features, build harmonic playlists, fetch lyrics, render waveforms, and export DJ-ready files — by track name, ISRC, MusicBrainz ID, or Spotify track ID. No Spotify account required; a track name alone works (no ISRC needed).
+Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio features, build harmonic playlists, fetch lyrics, render waveforms, and export DJ-ready files. For reliable, full-catalog results, identify tracks by **name** (+ optional artist) or **ISRC** — a track name alone works, no Spotify account or ISRC needed. MusicBrainz IDs are also accepted. A raw **Spotify track ID** works too, but only for the minority of tracks we've already mapped to a Spotify ID (~2.4% of the catalog) — it is not a universal Spotify-ID reverse lookup, so prefer name or ISRC.
 
 ## Tools (v2.1.0 — 17 total)
 
 ### Core lookup
 | Tool | Description |
 |------|-------------|
-| `lookup_track` | BPM, key, mood, genre, danceability, energy and 30+ more — by track name (+ optional artist), ISRC, MusicBrainz ID, or Spotify track ID. Covers 270k+ pre-analyzed tracks + 7.5M fallback via MusicBrainz/AcousticBrainz |
+| `lookup_track` | BPM, key, mood, genre, danceability, energy and 30+ more — best by track name (+ optional artist) or ISRC, which search the full catalog and queue an on-demand fetch + analysis on a miss; also accepts a MusicBrainz ID, or a Spotify track ID for the minority of tracks already mapped to one (~2.4% — prefer name/ISRC). Covers 270k+ pre-analyzed tracks + 7.5M fallback via MusicBrainz/AcousticBrainz |
 | `search_tracks` | Full-text search across the catalog (FTS5-backed) |
 | `bulk_lookup` | Look up up to 50 tracks in one request |
 | `find_tracks_by_bpm` | Find tracks within ±tolerance of a target BPM |
@@ -88,7 +88,7 @@ Once connected, you can ask your AI:
 - *"Find me 10 tracks in A-Minor around 128 BPM"*
 - *"What's the mood and genre of Come to Daddy by Aphex Twin?"*
 - *"Look up the audio features for these 5 tracks: ..."*
-- *"Get the audio features for ISRC USUM71900001"* — also works with a MusicBrainz recording ID or a Spotify track ID
+- *"Get the audio features for ISRC USUM71900001"* — name or ISRC give the best coverage; a MusicBrainz recording ID also works, and a Spotify track ID resolves only for tracks we've already mapped to one (if your own Spotify integration already gives you the ISRC, pass that instead)
 
 ## API key tiers
 
