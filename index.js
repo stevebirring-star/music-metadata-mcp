@@ -115,13 +115,15 @@ function plain(content) {
 // ── Server ────────────────────────────────────────────────────────────────────
 
 const server = new McpServer(
-  { name: "music-metadata", version: "2.2.0" },
+  { name: "music-metadata", version: "2.3.0" },
   {
     capabilities: { tools: {} },
     instructions:
       "Music metadata, recognition, recommendation and DJ-tooling endpoints for the FreqBlog API.\n\n" +
       "PRIMARY: lookup_track (audio features by name, ISRC, MBID, or Spotify ID), search_tracks (full-text search), " +
-      "find_similar_tracks (recommendation engine).\n\n" +
+      "find_similar_tracks (acoustic recommendation engine), get_recommendations (Spotify " +
+      "/recommendations replacement — genre-aware blend of up to 5 seed tracks), get_related_artists " +
+      "(Spotify related-artists replacement — derived artist graph).\n\n" +
       "DJ: build_radio_playlist (harmonic + BPM-continuity walk), export_playlist " +
       "(Rekordbox/M3U/cuesheet), country_chart (live national charts), harmonic_keys " +
       "(Camelot wheel adjacency).\n\n" +
@@ -609,6 +611,62 @@ server.registerTool(
   }
 );
 
+// ── Tool: get_recommendations (Recommendations — Spotify /recommendations) ─────
+server.registerTool(
+  "get_recommendations",
+  {
+    description:
+      "Recommended tracks for one or more seed tracks — the drop-in for Spotify's removed " +
+      "GET /v1/recommendations. Blend up to 5 catalog seed tracks into a single point in " +
+      "audio-feature space and return the nearest catalogue tracks, RE-RANKED by genre affinity " +
+      "(so a feature-close cross-genre track doesn't outrank same-genre picks). Returns `seeds` " +
+      "(each {id, found}), `count`, and `tracks` (each {track, score}). `score` is the raw " +
+      "audio-feature cosine similarity in [0,1]; genre affinity influences ORDER, not the score, " +
+      "so the list is NOT strictly score-descending. seed_tracks are catalog itunes_track_ids " +
+      "(e.g. 'apple_ad1829eeccb70f9a') from search_tracks or any lookup_track response. Costs 2 quota units.",
+    inputSchema: {
+      seed_tracks: z
+        .array(z.string().min(1).max(80))
+        .min(1)
+        .max(5)
+        .describe("1-5 catalog itunes_track_ids to base recommendations on (blended into a feature-space centroid)"),
+      limit: z.number().int().min(1).max(100).default(20).describe("Number of recommendations to return (default 20)"),
+      exclude_seed_artists: z.boolean().default(false).describe("Drop tracks by any of the seed artists (default false)"),
+    },
+  },
+  async ({ seed_tracks, limit = 20, exclude_seed_artists = false }) => {
+    const params = new URLSearchParams({
+      seed_tracks: seed_tracks.join(","),
+      limit: String(limit),
+      exclude_seed_artists: String(exclude_seed_artists),
+    });
+    return text(await apiGet(`/recommendations?${params}`));
+  }
+);
+
+// ── Tool: get_related_artists (Recommendations — Spotify related-artists) ─────
+server.registerTool(
+  "get_related_artists",
+  {
+    description:
+      "Artists related to a seed artist — the drop-in for Spotify's removed " +
+      "GET /v1/artists/{id}/related-artists. No artist graph exists, so we derive one: build the " +
+      "seed artist's track-vector centroid, take its nearest catalogue tracks, aggregate by artist " +
+      "(each scored on its top-3 track similarities so a prolific artist can't dominate) plus a " +
+      "same-genre lift and a cross-genre penalty. Returns `artist`, `count`, and `related` (each " +
+      "{artist_name, score, match_count, sample_track_id}). Pass a sample_track_id straight to " +
+      "lookup_track or suggest_next_track. Costs 2 quota units.",
+    inputSchema: {
+      artist: z.string().min(1).max(200).describe("Seed artist name (as it appears in the catalog; case-insensitive)"),
+      limit: z.number().int().min(1).max(50).default(20).describe("Number of related artists to return (default 20)"),
+    },
+  },
+  async ({ artist, limit = 20 }) => {
+    const params = new URLSearchParams({ artist, limit: String(limit) });
+    return text(await apiGet(`/related-artists?${params}`));
+  }
+);
+
 // ── Tool: track_artwork_url (Slice 7) ─────────────────────────────────────────
 
 server.registerTool(
@@ -673,4 +731,4 @@ server.registerTool(
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-process.stderr.write("[music-metadata-mcp] Server running on stdio (v2.2.0 — 20 tools)\n");
+process.stderr.write("[music-metadata-mcp] Server running on stdio (v2.3.0 — 22 tools)\n");
