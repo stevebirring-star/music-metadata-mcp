@@ -1,7 +1,7 @@
 {
   "name": "music-metadata-mcp",
-  "version": "2.1.1",
-  "description": "MCP server for the FreqBlog Music API — 17 tools covering audio features, recommendations, harmonic radio, DJ-format export (Rekordbox/M3U/cuesheet), country charts, lyrics, waveforms and more. Drop-in Spotify audio-features replacement for AI workflows.",
+  "version": "2.2.0",
+  "description": "MCP server for the FreqBlog Music API — 20 tools covering audio features, recommendations, harmonic radio, DJ transition scoring + setlist ordering, DJ-format export (Rekordbox/M3U/cuesheet), country charts, lyrics, waveforms and more. Drop-in Spotify audio-features replacement for AI workflows.",
   "type": "module",
   "bin": {
     "music-metadata-mcp": "./index.js"
@@ -32,7 +32,10 @@
     "waveform",
     "recommendation",
     "harmonic-mixing",
-    "camelot"
+    "camelot",
+    "setlist",
+    "transition",
+    "set-builder"
   ],
   "author": "FreqBlog <hello@freqblog.com>",
   "license": "MIT",

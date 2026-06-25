@@ -4,7 +4,7 @@ MCP server for the [FreqBlog Music API](https://freqblog.com/music-api.html).
 
 Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio features, build harmonic playlists, fetch lyrics, render waveforms, and export DJ-ready files. For reliable, full-catalog results, identify tracks by **name** (+ optional artist) or **ISRC** — a track name alone works, no Spotify account or ISRC needed. MusicBrainz IDs are also accepted. A raw **Spotify track ID** works too, but only for the minority of tracks we've already mapped to a Spotify ID (~2.4% of the catalog) — it is not a universal Spotify-ID reverse lookup, so prefer name or ISRC.
 
-## Tools (v2.1.1 — 17 total)
+## Tools (v2.2.0 — 20 total)
 
 ### Core lookup
 | Tool | Description |
@@ -20,6 +20,9 @@ Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio
 |------|-------------|
 | `find_similar_tracks` | Cosine-similarity recommendation engine over the entire catalog |
 | `build_radio_playlist` | Harmonic + BPM-continuity DJ playlist from a seed track |
+| `score_transition` | Score how well one track mixes into another (0-100): harmonic + octave-aware BPM + energy. Costs 1 unit |
+| `suggest_next_track` | Ranked next-track picks for a seed, each with transition score + reason. Costs 3 units |
+| `build_setlist` | Order a 2-100 track crate into a beat-matched energy arc (peak_time/warmup/cooldown/flat). Costs 5 units |
 | `export_playlist` | Generate Rekordbox XML / M3U / cuesheet from a list of track ids |
 | `country_chart` | Live national music chart for 45 countries (Apple Music RSS) |
 | `harmonic_keys` | Camelot wheel adjacency — pure logic, no quota |
@@ -88,6 +91,9 @@ Once connected, you can ask your AI:
 - *"Find me 10 tracks in A-Minor around 128 BPM"*
 - *"What's the mood and genre of Come to Daddy by Aphex Twin?"*
 - *"Look up the audio features for these 5 tracks: ..."*
+- *"How well does this track mix into that one?"* — score_transition gives a 0-100 transition score with a reason
+- *"What should I play after this track?"* — suggest_next_track ranks the best next picks for a seed
+- *"Order these 12 tracks into a peak-time set and export it for Rekordbox"* — build_setlist then export_playlist
 - *"Get the audio features for ISRC USUM71900001"* — name or ISRC give the best coverage; a MusicBrainz recording ID also works, and a Spotify track ID resolves only for tracks we've already mapped to one (if your own Spotify integration already gives you the ISRC, pass that instead)
 
 ## API key tiers

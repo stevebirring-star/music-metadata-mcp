@@ -3,7 +3,7 @@
  * music-metadata-mcp
  * MCP server for the Music Metadata API (https://freqblog.com/music-api.html)
  *
- * Exposes BPM, key, mood, genre and 30+ audio features through 17 MCP tools.
+ * Exposes BPM, key, mood, genre and 30+ audio features through 20 MCP tools.
  * Drop-in replacement for Spotify audio-features in AI workflows.
  *
  * Usage:
@@ -115,7 +115,7 @@ function plain(content) {
 // ── Server ────────────────────────────────────────────────────────────────────
 
 const server = new McpServer(
-  { name: "music-metadata", version: "2.1.0" },
+  { name: "music-metadata", version: "2.2.0" },
   {
     capabilities: { tools: {} },
     instructions:
@@ -125,6 +125,10 @@ const server = new McpServer(
       "DJ: build_radio_playlist (harmonic + BPM-continuity walk), export_playlist " +
       "(Rekordbox/M3U/cuesheet), country_chart (live national charts), harmonic_keys " +
       "(Camelot wheel adjacency).\n\n" +
+      "SET FLOW (the differentiator — pairwise transition scoring + whole-set ordering): " +
+      "score_transition (how well track A mixes into track B, 0-100), suggest_next_track " +
+      "(ranked next-track picks for a seed), build_setlist (order a crate into a beat-matched " +
+      "energy arc). Chain build_setlist -> export_playlist to drop straight into Rekordbox/Serato.\n\n" +
       "FILTER + BROWSE: find_tracks_by_bpm, find_tracks_by_key, find_artist_tracks, " +
       "list_genres, tracks_in_genre.\n\n" +
       "EXTRAS: track_lyrics (synced + plain), track_artwork_url (cover art), " +
@@ -520,6 +524,91 @@ server.registerTool(
   }
 );
 
+// ── Tool: score_transition (Set Builder) ──────────────────────────────────────
+
+server.registerTool(
+  "score_transition",
+  {
+    description:
+      "Score how well one catalog track mixes into another (0-100) — the pairwise DJ " +
+      "transition score no raw key/BPM API gives you. Combines Camelot-wheel key " +
+      "compatibility, octave-aware BPM proximity (half/double-time counts as a match), and " +
+      "energy smoothness. Returns the overall score, per-component scores " +
+      "(harmonic/tempo/energy), a detail block (key relation, both Camelot keys, both BPMs, " +
+      "bpm_delta, bpm_octave_matched, both energies, energy_delta) and a one-line human reason. " +
+      "Both ids are catalog itunes_track_ids (e.g. 'apple_ad1829eeccb70f9a') — get them from " +
+      "search_tracks or any lookup_track response. Costs 1 quota unit.",
+    inputSchema: {
+      from_track_id: z.string().min(1).max(80).describe("The track you're mixing FROM (catalog itunes_track_id)"),
+      to_track_id: z.string().min(1).max(80).describe("The candidate track you're mixing INTO (catalog itunes_track_id)"),
+    },
+  },
+  async ({ from_track_id, to_track_id }) => {
+    const params = new URLSearchParams({ from_track_id, to_track_id });
+    return text(await apiGet(`/transition?${params}`));
+  }
+);
+
+// ── Tool: suggest_next_track (Set Builder) ─────────────────────────────────────
+
+server.registerTool(
+  "suggest_next_track",
+  {
+    description:
+      "Given a seed track, return the top-N catalog tracks to play NEXT, ranked by transition " +
+      "score. Each suggestion carries the same transition score, per-component scores and " +
+      "human reason as score_transition (e.g. '11B->11B same key, 118->117 BPM (-0.29), energy " +
+      "+0.12'). The seed's sonic neighbours re-ranked for a clean mix — pair with build_setlist " +
+      "to order a whole crate. seed_track_id is a catalog itunes_track_id from search_tracks or " +
+      "any lookup_track response. Costs 3 quota units.",
+    inputSchema: {
+      seed_track_id: z.string().min(1).max(80).describe("The track currently playing (catalog itunes_track_id)"),
+      n: z.number().int().min(1).max(50).default(10).describe("How many next-track suggestions to return (default 10)"),
+      min_score: z.number().int().min(0).max(100).default(0).describe("Drop candidates below this overall transition score (default 0)"),
+      exclude_same_artist: z.boolean().default(false).describe("Drop tracks by the seed's artist (default false)"),
+      bpm_drift: z.number().min(0.5).max(30).default(12).describe("Max BPM difference pre-filter before scoring (default 12)"),
+      max_key_distance: z.number().int().min(0).max(12).default(2).describe("Max Camelot-wheel hops pre-filter before scoring (default 2)"),
+    },
+  },
+  async ({ seed_track_id, n = 10, min_score = 0, exclude_same_artist = false, bpm_drift = 12, max_key_distance = 2 }) => {
+    const params = new URLSearchParams({
+      seed_track_id,
+      n: String(n),
+      min_score: String(min_score),
+      exclude_same_artist: String(exclude_same_artist),
+      bpm_drift: String(bpm_drift),
+      max_key_distance: String(max_key_distance),
+    });
+    return text(await apiGet(`/next-track?${params}`));
+  }
+);
+
+// ── Tool: build_setlist (Set Builder) ──────────────────────────────────────────
+
+server.registerTool(
+  "build_setlist",
+  {
+    description:
+      "Order a crate of 2-100 catalog tracks into a beat-matched DJ set that follows an energy " +
+      "arc, keeping each consecutive transition harmonically and tempo-smooth. arc is one of " +
+      "peak_time (default — builds to a peak then eases), warmup, cooldown, or flat. Returns " +
+      "the tracks in play order, the per-step transition scores + reasons, an overall flow_score " +
+      "(0-100), and any ids not found in the catalog (omitted). Pipe tracks[].itunes_track_id " +
+      "straight into export_playlist for a ready-to-mix Rekordbox/Serato file. track_ids are " +
+      "catalog itunes_track_ids. Costs 5 quota units.",
+    inputSchema: {
+      track_ids: z.array(z.string().min(1).max(80)).min(2).max(100).describe("The crate to order — 2 to 100 catalog itunes_track_ids"),
+      arc: z.enum(["peak_time", "warmup", "cooldown", "flat"]).default("peak_time").describe("Energy arc to follow (default peak_time)"),
+      start_track_id: z.string().min(1).max(80).optional().describe("Optional fixed opener — must be one of track_ids"),
+    },
+  },
+  async ({ track_ids, arc = "peak_time", start_track_id }) => {
+    const body = { track_ids, arc };
+    if (start_track_id) body.start_track_id = start_track_id;
+    return text(await apiPost("/setlist", body));
+  }
+);
+
 // ── Tool: track_artwork_url (Slice 7) ─────────────────────────────────────────
 
 server.registerTool(
@@ -584,4 +673,4 @@ server.registerTool(
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-process.stderr.write("[music-metadata-mcp] Server running on stdio (v2.1.0 — 17 tools)\n");
+process.stderr.write("[music-metadata-mcp] Server running on stdio (v2.2.0 — 20 tools)\n");
