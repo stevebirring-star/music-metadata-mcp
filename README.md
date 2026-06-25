@@ -4,7 +4,7 @@ MCP server for the [FreqBlog Music API](https://freqblog.com/music-api.html).
 
 Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio features, build harmonic playlists, fetch lyrics, render waveforms, and export DJ-ready files. For reliable, full-catalog results, identify tracks by **name** (+ optional artist) or **ISRC** — a track name alone works, no Spotify account or ISRC needed. MusicBrainz IDs are also accepted. A raw **Spotify track ID** works too, but only for the minority of tracks we've already mapped to a Spotify ID (~2.4% of the catalog) — it is not a universal Spotify-ID reverse lookup, so prefer name or ISRC.
 
-## Tools (v2.3.0 — 22 total)
+## Tools (v2.4.0 — 23 total)
 
 ### Core lookup
 | Tool | Description |
@@ -39,6 +39,7 @@ Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio
 ### Per-track extras
 | Tool | Description |
 |------|-------------|
+| `tag_track` | Compact, honestly-labelled tag list (energy/danceability/valence/acousticness/instrumentalness + mood + genre) — a tag-shaped projection of `lookup_track`, every tag carrying its own confidence + provenance. Costs 1 unit |
 | `track_embedding` | 18-dim numeric vector for ML / similarity / clustering |
 | `track_artwork_url` | Resolved cover-art image URL (iTunes / Cover Art Archive) |
 | `track_lyrics` | Synced + plain lyrics via the open LRClib dataset |
@@ -98,6 +99,7 @@ Once connected, you can ask your AI:
 - *"Recommend tracks like these three"* — get_recommendations blends up to 5 seed tracks (Spotify /recommendations replacement)
 - *"Which artists are similar to Van Halen?"* — get_related_artists derives an artist graph (Spotify related-artists replacement)
 - *"Order these 12 tracks into a peak-time set and export it for Rekordbox"* — build_setlist then export_playlist
+- *"Tag this track and tell me how confident each tag is"* — tag_track returns a compact tag list where every tag is labelled with its confidence + provenance (measured / derived / model-estimated / catalog-genre)
 - *"Get the audio features for ISRC USUM71900001"* — name or ISRC give the best coverage; a MusicBrainz recording ID also works, and a Spotify track ID resolves only for tracks we've already mapped to one (if your own Spotify integration already gives you the ISRC, pass that instead)
 
 ## API key tiers

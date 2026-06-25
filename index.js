@@ -115,7 +115,7 @@ function plain(content) {
 // ── Server ────────────────────────────────────────────────────────────────────
 
 const server = new McpServer(
-  { name: "music-metadata", version: "2.3.0" },
+  { name: "music-metadata", version: "2.4.0" },
   {
     capabilities: { tools: {} },
     instructions:
@@ -134,7 +134,9 @@ const server = new McpServer(
       "FILTER + BROWSE: find_tracks_by_bpm, find_tracks_by_key, find_artist_tracks, " +
       "list_genres, tracks_in_genre.\n\n" +
       "EXTRAS: track_lyrics (synced + plain), track_artwork_url (cover art), " +
-      "track_waveform_svg (waveform render), track_embedding (numeric vector for ML).\n\n" +
+      "track_waveform_svg (waveform render), track_embedding (numeric vector for ML), " +
+      "tag_track (compact, honestly-labelled tag list — a tag-shaped projection of lookup_track, " +
+      "each tag carrying its confidence + provenance).\n\n" +
       "BATCH: bulk_lookup (up to 50 tracks per call).",
   }
 );
@@ -726,9 +728,85 @@ server.registerTool(
     return plain(await apiGetText(`/track/${encodeURIComponent(track_id)}/waveform.svg?${params}`));
   }
 );
+// ── Tool: tag_track (Tags) ──────────────────────────────────────────────────
+
+server.registerTool(
+  "tag_track",
+  {
+    description:
+      "Get a compact, HONESTLY-LABELLED tag list for a track — energy / danceability / valence / " +
+      "acousticness / instrumentalness, plus a mood tag and a broad genre tag. It is a tag-shaped " +
+      "projection of the same open-data analysis lookup_track returns (no audio upload, no extra " +
+      "compute), so it costs the same 1 quota unit and is charged only on a served result. The " +
+      "differentiator vs opaque taggers (e.g. Cyanite) is that EVERY tag carries its own " +
+      "`confidence` (measured = our Essentia analysis | derived = MIREX mood from valence+energy | " +
+      "model-estimated = AcousticBrainz mood SVM probability, raw prob in `value` | catalog-genre = " +
+      "broad catalogue tag) and `provenance` (essentia | valence+energy | acousticbrainz | catalog). " +
+      "`value` is the [0,1] score for numeric tags and null for label-only tags (mood category, " +
+      "genre). Provide exactly ONE of: a track name (optionally with artist), an ISRC, a " +
+      "MusicBrainz recording ID (mbid), a Spotify track ID, or a catalog track_id " +
+      "(itunes_track_id from any prior response). The broad, reliable coverage is the MEASURED tags " +
+      "from our Essentia analysis over the analysed catalogue (~178k+ tracks, plus on-demand by " +
+      "name); MBID/ISRC additionally reach 7.5M+ AcousticBrainz recordings WHEN you supply that " +
+      "identifier. For the full numeric feature set use lookup_track; for nearest tracks use " +
+      "find_similar_tracks. Returns { track, count, tags, disclaimer }.",
+    inputSchema: {
+      track: z
+        .string()
+        .min(1)
+        .max(200)
+        .optional()
+        .describe("Track name. Supply this OR isrc OR mbid OR spotify_id OR track_id."),
+      artist: z
+        .string()
+        .max(200)
+        .optional()
+        .describe("Artist name — only used alongside `track`; improves accuracy."),
+      isrc: z
+        .string()
+        .max(15)
+        .optional()
+        .describe("ISRC, e.g. USUM71900001."),
+      mbid: z
+        .string()
+        .max(40)
+        .optional()
+        .describe("MusicBrainz recording ID (UUID). Tags come from AcousticBrainz for that exact recording."),
+      spotify_id: z
+        .string()
+        .max(80)
+        .optional()
+        .describe("Spotify track ID (also accepts a spotify:track: URI or open.spotify.com URL). Resolves ONLY tracks already mapped to a Spotify ID (~2.4% of the catalog) — prefer track (+artist) or isrc."),
+      track_id: z
+        .string()
+        .min(1)
+        .max(80)
+        .optional()
+        .describe("Catalog itunes_track_id from any prior response (e.g. search_tracks or a lookup_track result)."),
+    },
+  },
+  async ({ track, artist, isrc, mbid, spotify_id, track_id }) => {
+    const supplied = [
+      ["track", track],
+      ["isrc", isrc],
+      ["mbid", mbid],
+      ["spotify_id", spotify_id],
+      ["track_id", track_id],
+    ].filter(([, v]) => v != null && String(v).length > 0);
+    if (supplied.length !== 1) {
+      throw new Error(
+        "Provide exactly one of: track (optionally with artist), isrc, mbid, spotify_id, or track_id."
+      );
+    }
+    const [k, value] = supplied[0];
+    const params = new URLSearchParams({ [k]: String(value) });
+    if (k === "track" && artist) params.set("artist", artist);
+    return text(await apiGet(`/tag?${params}`));
+  }
+);
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-process.stderr.write("[music-metadata-mcp] Server running on stdio (v2.3.0 — 22 tools)\n");
+process.stderr.write("[music-metadata-mcp] Server running on stdio (v2.4.0 — 23 tools)\n");
