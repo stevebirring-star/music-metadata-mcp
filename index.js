@@ -137,7 +137,7 @@ const server = new McpServer(
       "track_waveform_svg (waveform render), track_embedding (numeric vector for ML), " +
       "tag_track (compact, honestly-labelled tag list — a tag-shaped projection of lookup_track, " +
       "each tag carrying its confidence + provenance).\n\n" +
-      "BATCH: bulk_lookup (up to 50 tracks per call).",
+      "BATCH: bulk_lookup (up to 50 tracks per call, by name or ISRC).",
   }
 );
 
@@ -285,25 +285,48 @@ server.registerTool(
   "bulk_lookup",
   {
     description:
-      "Look up audio features for up to 50 tracks in a single request. " +
-      "Much faster than looping lookup_track. " +
-      "Each track in the request uses one quota token. " +
-      "Returns found/not_found counts alongside individual results.",
+      "Look up audio features for up to 50 tracks in a single request, by name and/or ISRC. " +
+      "ISRC is matched exactly first (best for CJK/K-pop/niche tracks whose fuzzy name-match misses), " +
+      "name as the fallback. Much faster than looping lookup_track. " +
+      "Billed per item that returns features or queues an on-demand ingest; an ISRC/name with no match anywhere is free. " +
+      "Returns found/not_found counts alongside individual results (each echoes back its isrc).",
     inputSchema: {
       tracks: z
         .array(
-          z.object({
-            track: z.string().min(2).max(200).describe("Track name"),
-            artist: z
-              .string()
-              .max(200)
-              .optional()
-              .describe("Artist name (optional)"),
-          })
+          z
+            .object({
+              track: z
+                .string()
+                .min(1)
+                .max(200)
+                .optional()
+                .describe(
+                  "Track name. Supply this OR isrc (or both — isrc is matched first, the name is the fallback)."
+                ),
+              artist: z
+                .string()
+                .max(200)
+                .optional()
+                .describe("Artist name (optional, narrows the name search)"),
+              isrc: z
+                .string()
+                .max(15)
+                .optional()
+                .describe(
+                  "ISRC, e.g. 'USUM71900001' (hyphens optional). Matched exactly first. Supply this OR track."
+                ),
+            })
+            .refine(
+              (o) =>
+                Boolean(
+                  (o.track && o.track.trim()) || (o.isrc && o.isrc.trim())
+                ),
+              { message: "each track needs `isrc` or `track`" }
+            )
         )
         .min(1)
         .max(50)
-        .describe("Array of tracks to look up (max 50)"),
+        .describe("Array of tracks to look up by name and/or ISRC (max 50)"),
     },
   },
   async ({ tracks }) => {

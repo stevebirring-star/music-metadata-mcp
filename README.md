@@ -11,7 +11,7 @@ Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio
 |------|-------------|
 | `lookup_track` | BPM, key, mood, genre, danceability, energy and 30+ more — best by track name (+ optional artist) or ISRC, which search the full catalog and queue an on-demand fetch + analysis on a miss; also accepts a MusicBrainz ID, or a Spotify track ID for the minority of tracks already mapped to one (~2.4% — prefer name/ISRC). Covers 270k+ pre-analyzed tracks + 7.5M fallback via MusicBrainz/AcousticBrainz |
 | `search_tracks` | Full-text search across the catalog (FTS5-backed) |
-| `bulk_lookup` | Look up up to 50 tracks in one request |
+| `bulk_lookup` | Look up up to 50 tracks (by name or ISRC) in one request |
 | `find_tracks_by_bpm` | Find tracks within ±tolerance of a target BPM |
 | `find_tracks_by_key` | Find tracks by key — Camelot (8A), Open Key (1m), or name (A-Minor) |
 
