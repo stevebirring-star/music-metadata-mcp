@@ -137,7 +137,8 @@ const server = new McpServer(
       "track_waveform_svg (waveform render), track_embedding (numeric vector for ML), " +
       "tag_track (compact, honestly-labelled tag list — a tag-shaped projection of lookup_track, " +
       "each tag carrying its confidence + provenance).\n\n" +
-      "BATCH: bulk_lookup (up to 50 tracks per call, by name or ISRC).",
+      "BATCH: bulk_lookup (up to 50 tracks processed per call, by name or ISRC; over-cap or " +
+      "malformed items come back skipped, never failing the batch).",
   }
 );
 
@@ -288,8 +289,12 @@ server.registerTool(
       "Look up audio features for up to 50 tracks in a single request, by name and/or ISRC. " +
       "ISRC is matched exactly first (best for CJK/K-pop/niche tracks whose fuzzy name-match misses), " +
       "name as the fallback. Much faster than looping lookup_track. " +
+      "One bad entry never fails the batch: items beyond the 50-per-call cap come back with " +
+      "found:false and backfill_status 'over_limit', and an item missing BOTH track and isrc comes " +
+      "back 'invalid_no_query' — neither is processed or charged. The response 'skipped' field counts " +
+      "them, so split a long list into calls of <=50 and resubmit any skipped rows (up to 200 accepted per call). " +
       "Billed per item that returns features or queues an on-demand ingest; an ISRC/name with no match anywhere is free. " +
-      "Returns found/not_found counts alongside individual results (each echoes back its isrc).",
+      "Returns found/not_found/skipped counts alongside individual results (each echoes back its isrc).",
     inputSchema: {
       tracks: z
         .array(
@@ -316,17 +321,14 @@ server.registerTool(
                   "ISRC, e.g. 'USUM71900001' (hyphens optional). Matched exactly first. Supply this OR track."
                 ),
             })
-            .refine(
-              (o) =>
-                Boolean(
-                  (o.track && o.track.trim()) || (o.isrc && o.isrc.trim())
-                ),
-              { message: "each track needs `isrc` or `track`" }
-            )
         )
         .min(1)
-        .max(50)
-        .describe("Array of tracks to look up by name and/or ISRC (max 50)"),
+        .max(200)
+        .describe(
+          "Array of tracks to look up by name and/or ISRC. Up to 50 are processed per call; " +
+          "extra items (up to 200 accepted) and any item missing both track and isrc come back " +
+          "skipped (see the response's `skipped` count). Each item should carry `track` or `isrc`."
+        ),
     },
   },
   async ({ tracks }) => {
