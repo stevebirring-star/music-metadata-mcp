@@ -9,7 +9,7 @@ Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio
 ### Core lookup
 | Tool | Description |
 |------|-------------|
-| `lookup_track` | BPM, key, mood, genre, danceability, energy and 30+ more — best by track name (+ optional artist) or ISRC, which search the full catalog and queue an on-demand fetch + analysis on a miss; also accepts a MusicBrainz ID, or a Spotify track ID for the minority of tracks already mapped to one (~2.4% — prefer name/ISRC). Covers 270k+ pre-analyzed tracks + 7.5M fallback via MusicBrainz/AcousticBrainz |
+| `lookup_track` | BPM, key, mood, genre, danceability, energy and 30+ more — best by track name (+ optional artist) or ISRC, which search the full catalog and queue an on-demand fetch + analysis on a miss; also accepts a MusicBrainz ID, or a Spotify track ID for the minority of tracks already mapped to one (~2.4% — prefer name/ISRC). Covers 270k+ pre-analyzed tracks + 7.5M fallback via MusicBrainz/AcousticBrainz. Features come from a track's commercial streaming preview audio, so a track with no streaming release we can reach (CD-only, unreleased, or off-streaming) returns a clear "not available" result rather than data — there's no audio to analyse |
 | `search_tracks` | Full-text search across the catalog (FTS5-backed) |
 | `bulk_lookup` | Look up up to 50 tracks (by name or ISRC) in one request |
 | `find_tracks_by_bpm` | Find tracks within ±tolerance of a target BPM |
