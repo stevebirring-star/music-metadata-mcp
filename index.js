@@ -587,7 +587,11 @@ server.registerTool(
       "Given a seed track, return the top-N catalog tracks to play NEXT, ranked by transition " +
       "score. Each suggestion carries the same transition score, per-component scores and " +
       "human reason as score_transition (e.g. '11B->11B same key, 118->117 BPM (-0.29), energy " +
-      "+0.12'). The seed's sonic neighbours re-ranked for a clean mix — pair with build_setlist " +
+      "+0.12'), plus its genre and genre_relation to the seed. GENRE-AWARE by default " +
+      "(cross_genre=auto): off-genre picks that only coincidentally share the seed's key/BPM sink " +
+      "to the bottom, so a country or latin track can't top the list after a house record — use " +
+      "cross_genre=strict for same-genre-family only, or allow for the old harmonic-only ranking. " +
+      "The seed's sonic neighbours re-ranked for a clean mix — pair with build_setlist " +
       "to order a whole crate. seed_track_id is a catalog itunes_track_id from search_tracks or " +
       "any lookup_track response. Costs 3 quota units.",
     inputSchema: {
@@ -597,9 +601,10 @@ server.registerTool(
       exclude_same_artist: z.boolean().default(false).describe("Drop tracks by the seed's artist (default false)"),
       bpm_drift: z.number().min(0.5).max(30).default(12).describe("Max BPM difference pre-filter before scoring (default 12)"),
       max_key_distance: z.number().int().min(0).max(12).default(2).describe("Max Camelot-wheel hops pre-filter before scoring (default 2)"),
+      cross_genre: z.enum(["auto", "allow", "strict"]).default("auto").describe("Genre handling: 'auto' (default) keeps picks in a mixable genre lane so an off-genre track that only shares key/BPM sinks to the bottom; 'strict' = same genre-family only; 'allow' = genre-blind (harmonic+tempo+energy only)"),
     },
   },
-  async ({ seed_track_id, n = 10, min_score = 0, exclude_same_artist = false, bpm_drift = 12, max_key_distance = 2 }) => {
+  async ({ seed_track_id, n = 10, min_score = 0, exclude_same_artist = false, bpm_drift = 12, max_key_distance = 2, cross_genre = "auto" }) => {
     const params = new URLSearchParams({
       seed_track_id,
       n: String(n),
@@ -607,6 +612,7 @@ server.registerTool(
       exclude_same_artist: String(exclude_same_artist),
       bpm_drift: String(bpm_drift),
       max_key_distance: String(max_key_distance),
+      cross_genre,
     });
     return text(await apiGet(`/next-track?${params}`));
   }
@@ -647,9 +653,11 @@ server.registerTool(
       "GET /v1/recommendations. Blend up to 5 catalog seed tracks into a single point in " +
       "audio-feature space and return the nearest catalogue tracks, RE-RANKED by genre affinity " +
       "(so a feature-close cross-genre track doesn't outrank same-genre picks). Returns `seeds` " +
-      "(each {id, found}), `count`, and `tracks` (each {track, score}). `score` is the raw " +
-      "audio-feature cosine similarity in [0,1]; genre affinity influences ORDER, not the score, " +
-      "so the list is NOT strictly score-descending. seed_tracks are catalog itunes_track_ids " +
+      "(each {id, found}), `count`, and `tracks` (each {track, score}; track carries its genre). " +
+      "`score` is the raw audio-feature cosine similarity in [0,1]; genre affinity influences " +
+      "ORDER, not the score, so the list is NOT strictly score-descending. Use cross_genre=strict " +
+      "to return same-genre-family tracks ONLY (off-genre dropped server-side), or allow to " +
+      "disable the genre ranking. seed_tracks are catalog itunes_track_ids " +
       "(e.g. 'apple_ad1829eeccb70f9a') from search_tracks or any lookup_track response. Costs 2 quota units.",
     inputSchema: {
       seed_tracks: z
@@ -659,13 +667,15 @@ server.registerTool(
         .describe("1-5 catalog itunes_track_ids to base recommendations on (blended into a feature-space centroid)"),
       limit: z.number().int().min(1).max(100).default(20).describe("Number of recommendations to return (default 20)"),
       exclude_seed_artists: z.boolean().default(false).describe("Drop tracks by any of the seed artists (default false)"),
+      cross_genre: z.enum(["auto", "allow", "strict"]).default("auto").describe("Genre handling (mirrors suggest_next_track): 'auto' (default) re-ranks by genre affinity so a feature-close cross-genre track can't outrank same-genre picks; 'strict' = same genre-family only (off-genre dropped server-side); 'allow' = genre-blind (pure audio-feature cosine)"),
     },
   },
-  async ({ seed_tracks, limit = 20, exclude_seed_artists = false }) => {
+  async ({ seed_tracks, limit = 20, exclude_seed_artists = false, cross_genre = "auto" }) => {
     const params = new URLSearchParams({
       seed_tracks: seed_tracks.join(","),
       limit: String(limit),
       exclude_seed_artists: String(exclude_seed_artists),
+      cross_genre,
     });
     return text(await apiGet(`/recommendations?${params}`));
   }
