@@ -19,7 +19,7 @@ Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio
 | Tool | Description |
 |------|-------------|
 | `find_similar_tracks` | Cosine-similarity recommendation engine over the entire catalog |
-| `get_recommendations` | Spotify `/v1/recommendations` replacement — blend up to 5 seed tracks, genre-aware ranking. Costs 2 units |
+| `get_recommendations` | Spotify `/v1/recommendations` replacement — blend up to 5 seed tracks (or seed by `track`+`artist` name), genre-aware ranking. Costs 2 units |
 | `get_related_artists` | Spotify related-artists replacement — derived artist graph from audio-feature similarity. Costs 2 units |
 | `build_radio_playlist` | Harmonic + BPM-continuity DJ playlist from a seed track |
 | `score_transition` | Score how well one track mixes into another (0-100): harmonic + octave-aware BPM + energy. Costs 1 unit |

@@ -658,25 +658,38 @@ server.registerTool(
       "ORDER, not the score, so the list is NOT strictly score-descending. Use cross_genre=strict " +
       "to return same-genre-family tracks ONLY (off-genre dropped server-side), or allow to " +
       "disable the genre ranking. seed_tracks are catalog itunes_track_ids " +
-      "(e.g. 'apple_ad1829eeccb70f9a') from search_tracks or any lookup_track response. Costs 2 quota units.",
+      "(e.g. 'apple_ad1829eeccb70f9a') from search_tracks or any lookup_track response. " +
+      "NO id? Pass `track` (+ optional `artist`) instead and we resolve the name to the best catalog " +
+      "match and seed on it — the resolved track is echoed back as `seed_query`; seed_tracks wins if " +
+      "both are given. Costs 2 quota units.",
     inputSchema: {
       seed_tracks: z
         .array(z.string().min(1).max(80))
         .min(1)
         .max(5)
-        .describe("1-5 catalog itunes_track_ids to base recommendations on (blended into a feature-space centroid)"),
+        .optional()
+        .describe("1-5 catalog itunes_track_ids to base recommendations on (blended into a feature-space centroid). Omit and use `track`(+`artist`) to seed by name instead"),
+      track: z.string().min(1).max(200).optional().describe("Seed by track NAME instead of an id — resolved to the best catalog match (echoed back as seed_query). Pair with `artist` to disambiguate. Ignored when seed_tracks is given"),
+      artist: z.string().min(1).max(200).optional().describe("Artist name narrowing the `track` seed (case-insensitive)"),
       limit: z.number().int().min(1).max(100).default(20).describe("Number of recommendations to return (default 20)"),
       exclude_seed_artists: z.boolean().default(false).describe("Drop tracks by any of the seed artists (default false)"),
       cross_genre: z.enum(["auto", "allow", "strict"]).default("auto").describe("Genre handling (mirrors suggest_next_track): 'auto' (default) re-ranks by genre affinity so a feature-close cross-genre track can't outrank same-genre picks; 'strict' = same genre-family only (off-genre dropped server-side); 'allow' = genre-blind (pure audio-feature cosine)"),
     },
   },
-  async ({ seed_tracks, limit = 20, exclude_seed_artists = false, cross_genre = "auto" }) => {
+  async ({ seed_tracks, track, artist, limit = 20, exclude_seed_artists = false, cross_genre = "auto" }) => {
     const params = new URLSearchParams({
-      seed_tracks: seed_tracks.join(","),
       limit: String(limit),
       exclude_seed_artists: String(exclude_seed_artists),
       cross_genre,
     });
+    if (seed_tracks && seed_tracks.length) {
+      params.set("seed_tracks", seed_tracks.join(","));
+    } else if (track) {
+      params.set("track", track);
+      if (artist) params.set("artist", artist);
+    } else {
+      return text('{"error":"Provide either seed_tracks (1-5 catalog itunes_track_ids) or a track name (with optional artist)."}');
+    }
     return text(await apiGet(`/recommendations?${params}`));
   }
 );
