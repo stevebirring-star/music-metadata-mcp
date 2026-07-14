@@ -202,6 +202,12 @@ server.registerTool(
     const [key, value] = supplied[0];
     const params = new URLSearchParams({ [key]: String(value) });
     if (key === "track" && artist) params.set("artist", artist);
+    // Auto-inline on a name miss: hold the request for the on-demand ingest and get
+    // the analysed track back in THIS call (HTTP 200) instead of a 202 the model would
+    // have to re-poll. Only `track` misses queue an ingest, so only they benefit; the
+    // API caps the wait at 25s (< its 30s gateway timeout) and falls back to a 202 if
+    // the ingest isn't ready in time. (isrc/mbid/spotify_id 404 on miss — no wait.)
+    if (key === "track") params.set("wait", "25");
     return text(await apiGet(`/lookup?${params}`));
   }
 );
