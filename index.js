@@ -115,7 +115,7 @@ function plain(content) {
 // ── Server ────────────────────────────────────────────────────────────────────
 
 const server = new McpServer(
-  { name: "music-metadata", version: "2.7.0" },
+  { name: "music-metadata", version: "2.8.0" },
   {
     capabilities: { tools: {} },
     instructions:
@@ -147,6 +147,8 @@ const server = new McpServer(
 server.registerTool(
   "lookup_track",
   {
+    title: "Look Up Track Audio Features",
+    annotations: { title: "Look Up Track Audio Features", readOnlyHint: true, openWorldHint: true },
     description:
       "Look up audio features for a track — BPM, musical key, mood, genre, danceability, " +
       "energy, acousticness, instrumentalness and 30+ more. Provide exactly ONE of: a track " +
@@ -217,6 +219,8 @@ server.registerTool(
 server.registerTool(
   "find_tracks_by_bpm",
   {
+    title: "Find Tracks by BPM",
+    annotations: { title: "Find Tracks by BPM", readOnlyHint: true, openWorldHint: true },
     description:
       "Find pre-analyzed tracks within a BPM range. " +
       "Results ordered by proximity to target BPM then by popularity. " +
@@ -258,6 +262,8 @@ server.registerTool(
 server.registerTool(
   "find_tracks_by_key",
   {
+    title: "Find Tracks by Musical Key",
+    annotations: { title: "Find Tracks by Musical Key", readOnlyHint: true, openWorldHint: true },
     description:
       "Find pre-analyzed tracks in a specific musical key. " +
       "Accepts Camelot notation (e.g. '8A'), Open Key (e.g. '1m'), or key name (e.g. 'A-Minor'). " +
@@ -291,6 +297,8 @@ server.registerTool(
 server.registerTool(
   "bulk_lookup",
   {
+    title: "Bulk Track Lookup",
+    annotations: { title: "Bulk Track Lookup", readOnlyHint: true, openWorldHint: true },
     description:
       "Look up audio features for up to 50 tracks in a single request, by name and/or ISRC. " +
       "ISRC is matched exactly first (best for CJK/K-pop/niche tracks whose fuzzy name-match misses), " +
@@ -348,6 +356,8 @@ server.registerTool(
 server.registerTool(
   "search_tracks",
   {
+    title: "Search Tracks",
+    annotations: { title: "Search Tracks", readOnlyHint: true, openWorldHint: true },
     description:
       "Full-text search across the catalog by track / artist / album. Returns " +
       "lightweight track stubs (no audio features) ranked by FTS5 BM25 relevance " +
@@ -369,6 +379,8 @@ server.registerTool(
 server.registerTool(
   "find_artist_tracks",
   {
+    title: "Find an Artist's Tracks",
+    annotations: { title: "Find an Artist's Tracks", readOnlyHint: true, openWorldHint: true },
     description:
       "List every catalog track for an artist (case-insensitive exact match). " +
       "Paginated via limit + offset. Returns track stubs only — pair with " +
@@ -390,6 +402,8 @@ server.registerTool(
 server.registerTool(
   "list_genres",
   {
+    title: "List Genres",
+    annotations: { title: "List Genres", readOnlyHint: true, openWorldHint: true },
     description:
       "List every distinct genre tag in the catalog with track counts. " +
       "Sorted by count descending. Use the resulting genre names with tracks_in_genre.",
@@ -409,6 +423,8 @@ server.registerTool(
 server.registerTool(
   "tracks_in_genre",
   {
+    title: "List Tracks in a Genre",
+    annotations: { title: "List Tracks in a Genre", readOnlyHint: true, openWorldHint: true },
     description:
       "List catalog tracks tagged with a specific genre. Discover available genre names " +
       "via list_genres. Paginated.",
@@ -429,6 +445,8 @@ server.registerTool(
 server.registerTool(
   "harmonic_keys",
   {
+    title: "Find Harmonically Compatible Keys",
+    annotations: { title: "Find Harmonically Compatible Keys", readOnlyHint: true, openWorldHint: false },
     description:
       "Pure-logic helper: given a Camelot value (e.g. 8A), return all harmonically " +
       "compatible keys. Always returns same / relative / adjacent_up / adjacent_down. " +
@@ -449,6 +467,8 @@ server.registerTool(
 server.registerTool(
   "track_embedding",
   {
+    title: "Get Track Embedding Vector",
+    annotations: { title: "Get Track Embedding Vector", readOnlyHint: true, openWorldHint: true },
     description:
       "Project a track's audio features into an 18-dimensional numeric vector — for " +
       "similarity search, clustering, or feeding into your own ML model. Returns " +
@@ -468,6 +488,8 @@ server.registerTool(
 server.registerTool(
   "find_similar_tracks",
   {
+    title: "Find Similar Tracks",
+    annotations: { title: "Find Similar Tracks", readOnlyHint: true, openWorldHint: true },
     description:
       "Recommendation engine. Given a seed track id, return the most acoustically " +
       "similar tracks in the catalog ranked by cosine similarity over an 18-feature " +
@@ -491,6 +513,8 @@ server.registerTool(
 server.registerTool(
   "country_chart",
   {
+    title: "Get Country Music Chart",
+    annotations: { title: "Get Country Music Chart", readOnlyHint: true, openWorldHint: true },
     description:
       "Live national music chart for any of 45 supported countries (ISO alpha-2, " +
       "lowercase: us, gb, jp, de, fr, mx, …). Sourced from Apple Music RSS, cached " +
@@ -513,6 +537,8 @@ server.registerTool(
 server.registerTool(
   "build_radio_playlist",
   {
+    title: "Build Radio Playlist",
+    annotations: { title: "Build Radio Playlist", readOnlyHint: true, openWorldHint: true },
     description:
       "Generate a harmonic + BPM-continuity DJ playlist from a seed track. Greedy walk " +
       "over the similarity index that respects Camelot wheel adjacency and BPM drift. " +
@@ -543,6 +569,8 @@ server.registerTool(
 server.registerTool(
   "export_playlist",
   {
+    title: "Export Playlist (Rekordbox / M3U / Cuesheet)",
+    annotations: { title: "Export Playlist (Rekordbox / M3U / Cuesheet)", readOnlyHint: true, openWorldHint: true },
     description:
       "Generate a DJ-ready playlist file from a list of catalog track ids. Format options: " +
       "rekordbox (Pioneer XML 1.0.0 with hot cues), m3u (Extended M3U8 for Serato/Traktor/" +
@@ -564,6 +592,8 @@ server.registerTool(
 server.registerTool(
   "score_transition",
   {
+    title: "Score Transition",
+    annotations: { title: "Score Transition", readOnlyHint: true, openWorldHint: true },
     description:
       "Score how well one catalog track mixes into another (0-100) — the pairwise DJ " +
       "transition score no raw key/BPM API gives you. Combines Camelot-wheel key " +
@@ -589,6 +619,8 @@ server.registerTool(
 server.registerTool(
   "suggest_next_track",
   {
+    title: "Suggest Next Track",
+    annotations: { title: "Suggest Next Track", readOnlyHint: true, openWorldHint: true },
     description:
       "Given a seed track, return the top-N catalog tracks to play NEXT, ranked by transition " +
       "score. Each suggestion carries the same transition score, per-component scores and " +
@@ -629,6 +661,8 @@ server.registerTool(
 server.registerTool(
   "build_setlist",
   {
+    title: "Build Setlist",
+    annotations: { title: "Build Setlist", readOnlyHint: true, openWorldHint: true },
     description:
       "Order a crate of 2-100 catalog tracks into a beat-matched DJ set that follows an energy " +
       "arc, keeping each consecutive transition harmonically and tempo-smooth. arc is one of " +
@@ -654,6 +688,8 @@ server.registerTool(
 server.registerTool(
   "get_recommendations",
   {
+    title: "Get Recommendations",
+    annotations: { title: "Get Recommendations", readOnlyHint: true, openWorldHint: true },
     description:
       "Recommended tracks for one or more seed tracks — the drop-in for Spotify's removed " +
       "GET /v1/recommendations. Blend up to 5 catalog seed tracks into a single point in " +
@@ -704,6 +740,8 @@ server.registerTool(
 server.registerTool(
   "get_related_artists",
   {
+    title: "Get Related Artists",
+    annotations: { title: "Get Related Artists", readOnlyHint: true, openWorldHint: true },
     description:
       "Artists related to a seed artist — the drop-in for Spotify's removed " +
       "GET /v1/artists/{id}/related-artists. No artist graph exists, so we derive one: build the " +
@@ -728,6 +766,8 @@ server.registerTool(
 server.registerTool(
   "track_artwork_url",
   {
+    title: "Get Track Artwork URL",
+    annotations: { title: "Get Track Artwork URL", readOnlyHint: true, openWorldHint: true },
     description:
       "Get a cover-art image URL for a track. Resolves via iTunes Lookup for numeric " +
       "catalog ids, or Cover Art Archive via MBID for the rest. Returns the final " +
@@ -748,6 +788,8 @@ server.registerTool(
 server.registerTool(
   "track_lyrics",
   {
+    title: "Get Track Lyrics",
+    annotations: { title: "Get Track Lyrics", readOnlyHint: true, openWorldHint: true },
     description:
       "Synced + plain lyrics for a catalog track via the open LRClib dataset. Synced lyrics " +
       "come back parsed as [{ms, text}] — no LRC parsing needed. Returns instrumental=true " +
@@ -766,6 +808,8 @@ server.registerTool(
 server.registerTool(
   "track_waveform_svg",
   {
+    title: "Render Track Waveform (SVG)",
+    annotations: { title: "Render Track Waveform (SVG)", readOnlyHint: true, openWorldHint: true },
     description:
       "SVG waveform render of the track's 30-second iTunes preview. 120 RMS-bucketed " +
       "bars themable via CSS currentColor. Returns the SVG markup as text — embed " +
@@ -787,6 +831,8 @@ server.registerTool(
 server.registerTool(
   "tag_track",
   {
+    title: "Tag Track",
+    annotations: { title: "Tag Track", readOnlyHint: true, openWorldHint: true },
     description:
       "Get a compact, HONESTLY-LABELLED tag list for a track — energy / danceability / valence / " +
       "acousticness / instrumentalness, plus a mood tag and a broad genre tag. It is a tag-shaped " +
@@ -863,4 +909,4 @@ server.registerTool(
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-process.stderr.write("[music-metadata-mcp] Server running on stdio (v2.7.0 — 23 tools)\n");
+process.stderr.write("[music-metadata-mcp] Server running on stdio (v2.8.0 — 23 tools)\n");
