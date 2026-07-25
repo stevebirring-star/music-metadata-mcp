@@ -115,7 +115,7 @@ function plain(content) {
 // ── Server ────────────────────────────────────────────────────────────────────
 
 const server = new McpServer(
-  { name: "music-metadata", version: "2.8.0" },
+  { name: "music-metadata", version: "2.9.0" },
   {
     capabilities: { tools: {} },
     instructions:
@@ -909,4 +909,4 @@ server.registerTool(
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-process.stderr.write("[music-metadata-mcp] Server running on stdio (v2.8.0 — 23 tools)\n");
+process.stderr.write("[music-metadata-mcp] Server running on stdio (v2.9.0 — 23 tools)\n");
