@@ -156,7 +156,7 @@ server.registerTool(
       "track ID. For reliable coverage, identify by track name (+artist) or ISRC: a name miss " +
       "queues an on-demand fetch + analysis so even tracks not yet in the catalog get ingested " +
       "and returned shortly. A raw Spotify ID resolves ONLY tracks already mapped to a Spotify " +
-      "ID — a minority of the catalog (~2.4%) — not as a universal Spotify-ID reverse lookup. " +
+      "ID — a minority of the catalog (<1%) — not as a universal Spotify-ID reverse lookup. " +
       "Covers 270,000+ pre-analyzed tracks (instant) plus 7.5M+ via MusicBrainz + " +
       "AcousticBrainz fallback. " +
       "Drop-in replacement for Spotify audio-features.",
@@ -186,7 +186,7 @@ server.registerTool(
         .string()
         .max(80)
         .optional()
-        .describe("Spotify track ID (also accepts a spotify:track: URI or an open.spotify.com URL). Resolves ONLY tracks already mapped to a Spotify ID — a minority of the catalog (~2.4%) — so it is not a universal Spotify-ID reverse lookup and will 404 on unmapped IDs. For reliable coverage, look up by `track` (+ `artist`) or by `isrc` instead; if your own Spotify app already gives you the track's external_ids.isrc, pass that as `isrc`."),
+        .describe("Spotify track ID (also accepts a spotify:track: URI or an open.spotify.com URL). Resolves ONLY tracks already mapped to a Spotify ID — a minority of the catalog (<1%) — so it is not a universal Spotify-ID reverse lookup and will 404 on unmapped IDs. For reliable coverage, look up by `track` (+ `artist`) or by `isrc` instead; if your own Spotify app already gives you the track's external_ids.isrc, pass that as `isrc`."),
     },
   },
   async ({ track, artist, isrc, mbid, spotify_id }) => {
@@ -876,7 +876,7 @@ server.registerTool(
         .string()
         .max(80)
         .optional()
-        .describe("Spotify track ID (also accepts a spotify:track: URI or open.spotify.com URL). Resolves ONLY tracks already mapped to a Spotify ID (~2.4% of the catalog) — prefer track (+artist) or isrc."),
+        .describe("Spotify track ID (also accepts a spotify:track: URI or open.spotify.com URL). Resolves ONLY tracks already mapped to a Spotify ID (<1% of the catalog) — prefer track (+artist) or isrc."),
       track_id: z
         .string()
         .min(1)
