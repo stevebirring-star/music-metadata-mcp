@@ -493,16 +493,24 @@ server.registerTool(
     description:
       "Recommendation engine. Given a seed track id, return the most acoustically " +
       "similar tracks in the catalog ranked by cosine similarity over an 18-feature " +
-      "audio embedding. Use exclude_same_artist=true for cross-artist discovery feeds.",
+      "audio embedding. Use exclude_same_artist=true for cross-artist discovery feeds. " +
+      "Results are one row per recording (the same track released under several " +
+      "storefront ids is collapsed) and are kept in a mixable genre lane by default — " +
+      "set cross_genre='allow' for pure acoustic ranking, or 'strict' for the seed's " +
+      "genre family only. `score` is the raw cosine, so genre affects ORDER: the list " +
+      "is not strictly score-descending and should not be re-sorted by score.",
     inputSchema: {
       track_id: z.string().min(1).max(80).describe("Seed track id (catalog itunes_track_id)"),
       limit: z.number().int().min(1).max(50).default(10).describe("Max results (default 10)"),
       exclude_same_artist: z.boolean().default(false).describe("Drop tracks by the seed's artist"),
+      cross_genre: z.enum(["auto", "allow", "strict"]).default("auto")
+        .describe("Genre handling: auto (default, mixable lane), allow (genre-blind), strict (same genre family only)"),
     },
   },
-  async ({ track_id, limit = 10, exclude_same_artist = false }) => {
+  async ({ track_id, limit = 10, exclude_same_artist = false, cross_genre = "auto" }) => {
     const params = new URLSearchParams({
       track_id, limit: String(limit), exclude_same_artist: String(exclude_same_artist),
+      cross_genre,
     });
     return text(await apiGet(`/similar?${params}`));
   }
