@@ -362,7 +362,13 @@ server.registerTool(
       "Full-text search across the catalog by track / artist / album. Returns " +
       "lightweight track stubs (no audio features) ranked by FTS5 BM25 relevance " +
       "then popularity. Use this when you don't have an exact track name — pass " +
-      "any tokens and we prefix-match. Then call lookup_track for full features.",
+      "any tokens and we prefix-match. Then call lookup_track for full features. " +
+      "Each hit carries a `seedable` boolean: only seedable:true ids can seed the " +
+      "set-builder tools (recommendations / next-track / setlist / transition), " +
+      "which work off the similarity index of ANALYSED tracks — about a quarter of " +
+      "the catalog isn't analysed yet. Prefer the top hit with seedable:true; " +
+      "seeding a seedable:false id returns 404. If you need that exact track, call " +
+      "lookup_track on it first to queue analysis, then retry.",
     inputSchema: {
       q: z.string().min(1).max(200).describe("Search query (artist, track, album, or any combination)"),
       limit: z.number().int().min(1).max(50).default(10).describe("Max results (default 10)"),
