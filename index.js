@@ -503,8 +503,13 @@ server.registerTool(
       "Results are one row per recording (the same track released under several " +
       "storefront ids is collapsed) and are kept in a mixable genre lane by default — " +
       "set cross_genre='allow' for pure acoustic ranking, or 'strict' for the seed's " +
-      "genre family only. `score` is the raw cosine, so genre affects ORDER: the list " +
-      "is not strictly score-descending and should not be re-sorted by score.",
+      "genre family only. Each result carries `genre_relation` to the seed — 'same', " +
+      "'compatible' (different but mixable family), 'cross' (unrelated), or 'unknown' (either " +
+      "side has no mapped genre, so no adjustment was applied). HERE it is the value the " +
+      "ranking itself uses, so it explains the order and marks where the cross-genre tail " +
+      "begins; filter on it to keep only in-lane picks. `score` is the raw cosine, so genre " +
+      "affects ORDER: the list is not strictly score-descending and should not be re-sorted " +
+      "by score.",
     inputSchema: {
       track_id: z.string().min(1).max(80).describe("Seed track id (catalog itunes_track_id)"),
       limit: z.number().int().min(1).max(50).default(10).describe("Max results (default 10)"),
@@ -709,7 +714,15 @@ server.registerTool(
       "GET /v1/recommendations. Blend up to 5 catalog seed tracks into a single point in " +
       "audio-feature space and return the nearest catalogue tracks, RE-RANKED by genre affinity " +
       "(so a feature-close cross-genre track doesn't outrank same-genre picks). Returns `seeds` " +
-      "(each {id, found}), `count`, and `tracks` (each {track, score}; track carries its genre). " +
+      "(each {id, found}), `count`, and `tracks` (each {track, score, genre_relation}; track " +
+      "carries its genre). `genre_relation` is 'same', 'compatible' (different but mixable " +
+      "family), 'cross' (unrelated), or 'unknown' (either side has no mapped genre), measured " +
+      "against the PRIMARY seed — the first of your seed_tracks we could actually use, so " +
+      "reordering seed_tracks changes it and a skipped seed never becomes the reference. " +
+      "CAVEAT specific to this tool: it is a genre-FAMILY relation, NOT this tool's ranking " +
+      "adjustment (which boosts exact same-genre matches only), so a 'same' pick is a genuine " +
+      "family match but not a measure of how far it was moved up the list — unlike " +
+      "find_similar_tracks and suggest_next_track, where the field IS the ranking's own value. " +
       "`score` is the raw audio-feature cosine similarity in [0,1]; genre affinity influences " +
       "ORDER, not the score, so the list is NOT strictly score-descending. Use cross_genre=strict " +
       "to return same-genre-family tracks ONLY (off-genre dropped server-side), or allow to " +
