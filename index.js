@@ -719,10 +719,11 @@ server.registerTool(
       "family), 'cross' (unrelated), or 'unknown' (either side has no mapped genre), measured " +
       "against the PRIMARY seed — the first of your seed_tracks we could actually use, so " +
       "reordering seed_tracks changes it and a skipped seed never becomes the reference. " +
-      "CAVEAT specific to this tool: it is a genre-FAMILY relation, NOT this tool's ranking " +
-      "adjustment (which boosts exact same-genre matches only), so a 'same' pick is a genuine " +
-      "family match but not a measure of how far it was moved up the list — unlike " +
-      "find_similar_tracks and suggest_next_track, where the field IS the ranking's own value. " +
+      "With a SINGLE seed the field is the ranking's own verdict, so it explains the order — the " +
+      "same contract as find_similar_tracks and suggest_next_track. With SEVERAL seeds the " +
+      "ranking considers ALL of them while the label stays relative to your primary seed, so a " +
+      "'cross' label on a multi-seed call does NOT mean the track was pushed down — it may share " +
+      "a family with another of your seeds. " +
       "`score` is the raw audio-feature cosine similarity in [0,1]; genre affinity influences " +
       "ORDER, not the score, so the list is NOT strictly score-descending. Use cross_genre=strict " +
       "to return same-genre-family tracks ONLY (off-genre dropped server-side), or allow to " +
