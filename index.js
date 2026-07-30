@@ -115,7 +115,7 @@ function plain(content) {
 // ── Server ────────────────────────────────────────────────────────────────────
 
 const server = new McpServer(
-  { name: "music-metadata", version: "2.12.0" },
+  { name: "music-metadata", version: "2.13.0" },
   {
     capabilities: { tools: {} },
     instructions:
@@ -157,8 +157,8 @@ server.registerTool(
       "queues an on-demand fetch + analysis so even tracks not yet in the catalog get ingested " +
       "and returned shortly. A raw Spotify ID resolves ONLY tracks already mapped to a Spotify " +
       "ID — a minority of the catalog (<1%) — not as a universal Spotify-ID reverse lookup. " +
-      "Covers 270,000+ pre-analyzed tracks (instant) plus 7.5M+ via MusicBrainz + " +
-      "AcousticBrainz fallback. " +
+      "Covers 1.1 million+ pre-analyzed tracks (instant) plus 7.5M+ via MusicBrainz + " +
+      "AcousticBrainz fallback; GET /cache/stats returns the live count. " +
       "Drop-in replacement for Spotify audio-features.",
     inputSchema: {
       track: z
@@ -937,4 +937,4 @@ server.registerTool(
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-process.stderr.write("[music-metadata-mcp] Server running on stdio (v2.12.0 — 23 tools)\n");
+process.stderr.write("[music-metadata-mcp] Server running on stdio (v2.13.0 — 23 tools)\n");
