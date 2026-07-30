@@ -1,6 +1,6 @@
 {
   "name": "music-metadata-mcp",
-  "version": "2.13.0",
+  "version": "2.14.0",
   "description": "MCP server for the FreqBlog Music API \u2014 23 tools covering audio features, honestly-labelled tags, recommendations (Spotify /recommendations + related-artists replacement), harmonic radio, DJ transition scoring + setlist ordering, DJ-format export (Rekordbox/M3U/cuesheet), country charts, lyrics, waveforms and more. Drop-in Spotify audio-features replacement for AI workflows.",
   "type": "module",
   "bin": {
@@ -44,6 +44,10 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/stevebirring-star/music-metadata-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/stevebirring-star/music-metadata-mcp/issues",
+    "email": "hello@freqblog.com"
   },
   "engines": {
     "node": ">=18.0.0"
