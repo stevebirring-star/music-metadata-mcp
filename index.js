@@ -151,9 +151,10 @@ server.registerTool(
     annotations: { title: "Look Up Track Audio Features", readOnlyHint: true, openWorldHint: true },
     description:
       "Look up audio features for a track — BPM, musical key, mood, genre, danceability, " +
-      "energy, acousticness, instrumentalness and 30+ more. Provide exactly ONE of: a track " +
+      "energy, acousticness, instrumentalness and 30+ more. Provide AT LEAST ONE of: a track " +
       "name (optionally with artist), an ISRC, a MusicBrainz recording ID (mbid), or a Spotify " +
-      "track ID. For reliable coverage, identify by track name (+artist) or ISRC: a name miss " +
+      "track ID — if you know several, send them all rather than choosing; they resolve by " +
+      "precedence (track > isrc > mbid > spotify_id) and the rest are ignored. For reliable coverage, identify by track name (+artist) or ISRC: a name miss " +
       "queues an on-demand fetch + analysis so even tracks not yet in the catalog get ingested " +
       "and returned shortly. A raw Spotify ID resolves ONLY tracks already mapped to a Spotify " +
       "ID — a minority of the catalog (<1%) — not as a universal Spotify-ID reverse lookup. " +
@@ -196,9 +197,14 @@ server.registerTool(
       ["mbid", mbid],
       ["spotify_id", spotify_id],
     ].filter(([, v]) => v != null && String(v).length > 0);
-    if (supplied.length !== 1) {
+    // ⚠ Listed in the API's PRECEDENCE order (track > isrc > mbid > spotify_id): several
+    // identifiers is an ordinary shape, so take the first and ignore the rest rather than
+    // rejecting. Erroring here is what broke a real integration on 2026-08-11. Only the
+    // winner is forwarded, so THIS order decides what MCP users get — keep it in step with
+    // music-api app/lookup_params.LOOKUP_MODE_PRECEDENCE.
+    if (supplied.length === 0) {
       throw new Error(
-        "Provide exactly one of: track (optionally with artist), isrc, mbid, or spotify_id."
+        "Provide at least one of: track (optionally with artist), isrc, mbid, or spotify_id."
       );
     }
     const [key, value] = supplied[0];
@@ -873,9 +879,10 @@ server.registerTool(
       "model-estimated = AcousticBrainz mood SVM probability, raw prob in `value` | catalog-genre = " +
       "broad catalogue tag) and `provenance` (essentia | valence+energy | acousticbrainz | catalog). " +
       "`value` is the [0,1] score for numeric tags and null for label-only tags (mood category, " +
-      "genre). Provide exactly ONE of: a track name (optionally with artist), an ISRC, a " +
+      "genre). Provide AT LEAST ONE of: a track name (optionally with artist), an ISRC, a " +
       "MusicBrainz recording ID (mbid), a Spotify track ID, or a catalog track_id " +
-      "(itunes_track_id from any prior response). The broad, reliable coverage is the MEASURED tags " +
+      "(itunes_track_id from any prior response); sending several is fine — they resolve by " +
+      "precedence (track > isrc > track_id > mbid > spotify_id). The broad, reliable coverage is the MEASURED tags " +
       "from our Essentia analysis over the analysed catalogue (~178k+ tracks, plus on-demand by " +
       "name); MBID/ISRC additionally reach 7.5M+ AcousticBrainz recordings WHEN you supply that " +
       "identifier. For the full numeric feature set use lookup_track; for nearest tracks use " +
@@ -917,15 +924,19 @@ server.registerTool(
   },
   async ({ track, artist, isrc, mbid, spotify_id, track_id }) => {
     const supplied = [
+      // ⚠ /tag's precedence, which is NOT /lookup's: track_id sits third, not last. No
+      // /tag mode queues an ingest, so the order is "most likely to resolve" — track_id
+      // is exact but a metadata-only catalog row still 404s. Mirrors music-api
+      // app/lookup_params.TAG_MODE_PRECEDENCE; keep the two in step.
       ["track", track],
       ["isrc", isrc],
+      ["track_id", track_id],
       ["mbid", mbid],
       ["spotify_id", spotify_id],
-      ["track_id", track_id],
     ].filter(([, v]) => v != null && String(v).length > 0);
-    if (supplied.length !== 1) {
+    if (supplied.length === 0) {
       throw new Error(
-        "Provide exactly one of: track (optionally with artist), isrc, mbid, spotify_id, or track_id."
+        "Provide at least one of: track (optionally with artist), isrc, mbid, spotify_id, or track_id."
       );
     }
     const [k, value] = supplied[0];
