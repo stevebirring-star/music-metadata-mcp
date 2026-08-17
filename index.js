@@ -123,7 +123,7 @@ const TUNABLE_ATTRIBUTES = [
 // ── Server ────────────────────────────────────────────────────────────────────
 
 const server = new McpServer(
-  { name: "music-metadata", version: "2.15.0" },
+  { name: "music-metadata", version: "2.16.0" },
   {
     capabilities: { tools: {} },
     instructions:
@@ -984,4 +984,4 @@ server.registerTool(
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-process.stderr.write("[music-metadata-mcp] Server running on stdio (v2.15.0 — 23 tools)\n");
+process.stderr.write("[music-metadata-mcp] Server running on stdio (v2.16.0 — 23 tools)\n");

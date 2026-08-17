@@ -4,7 +4,7 @@ MCP server for the [FreqBlog Music API](https://freqblog.com/music-api.html).
 
 Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio features, build harmonic playlists, fetch lyrics, render waveforms, and export DJ-ready files. For reliable, full-catalog results, identify tracks by **name** (+ optional artist) or **ISRC** — a track name alone works, no Spotify account or ISRC needed. MusicBrainz IDs are also accepted. A raw **Spotify track ID** works too, but only for the minority of tracks we've already mapped to a Spotify ID (<1% of the catalog) — it is not a universal Spotify-ID reverse lookup, so prefer name or ISRC.
 
-## Tools (v2.15.0 — 23 total)
+## Tools (v2.16.0 — 23 total)
 
 ### Core lookup
 | Tool | Description |
@@ -19,7 +19,7 @@ Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio
 | Tool | Description |
 |------|-------------|
 | `find_similar_tracks` | Cosine-similarity recommendation engine over the entire catalog |
-| `get_recommendations` | Spotify `/v1/recommendations` replacement — blend up to 5 seed tracks (or seed by `track`+`artist` name), genre-aware ranking. Costs 2 units |
+| `get_recommendations` | Spotify `/v1/recommendations` replacement — blend up to 5 seed tracks (or seed by `track`+`artist` name), genre-aware ranking. Tune with `min`/`max` (hard filters) and `target` (preference) over tempo, energy, valence, danceability, acousticness, instrumentalness, liveness, speechiness, loudness, popularity, duration_ms. Costs 2 units |
 | `get_related_artists` | Spotify related-artists replacement — derived artist graph from audio-feature similarity. Costs 2 units |
 | `build_radio_playlist` | Harmonic + BPM-continuity DJ playlist from a seed track |
 | `score_transition` | Score how well one track mixes into another (0-100): harmonic + octave-aware BPM + energy. Costs 1 unit |
