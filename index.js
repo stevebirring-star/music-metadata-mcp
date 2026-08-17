@@ -112,6 +112,14 @@ function plain(content) {
   return { content: [{ type: "text", text: String(content) }] };
 }
 
+// Attributes get_recommendations can bound (min/max) or prefer (target). MUST stay in
+// step with app/recommend.py TUNABLE_ATTRIBUTES on the API side — the API 400s on
+// anything else, and this list is what lets us say so before spending the call.
+const TUNABLE_ATTRIBUTES = [
+  "acousticness", "danceability", "duration_ms", "energy", "instrumentalness",
+  "liveness", "loudness", "popularity", "speechiness", "tempo", "valence",
+];
+
 // ── Server ────────────────────────────────────────────────────────────────────
 
 const server = new McpServer(
@@ -739,7 +747,15 @@ server.registerTool(
       "(e.g. 'apple_ad1829eeccb70f9a') from search_tracks or any lookup_track response. " +
       "NO id? Pass `track` (+ optional `artist`) instead and we resolve the name to the best catalog " +
       "match and seed on it — the resolved track is echoed back as `seed_query`; seed_tracks wins if " +
-      "both are given. Costs 2 quota units.",
+      "both are given. " +
+      "TUNING: `min`/`max` are HARD filters and `target` is a preference (nearer ranks higher, " +
+      "nothing removed) over these attributes — acousticness, danceability, duration_ms, energy, " +
+      "instrumentalness, liveness, loudness, popularity, speechiness, tempo, valence. " +
+      "e.g. min={tempo:100}, max={tempo:130}, target={energy:0.8} for energetic 100-130 BPM tracks. " +
+      "When you tune, the response adds a `filters` block saying what applied, how many tracks each " +
+      "bound removed (`dropped_by`) and whether the bounds ran out of catalogue before `limit` " +
+      "(`limit_reached`) — if the list is short, read that BEFORE assuming the catalogue is thin. " +
+      "Costs 2 quota units.",
     inputSchema: {
       seed_tracks: z
         .array(z.string().min(1).max(80))
@@ -752,9 +768,12 @@ server.registerTool(
       limit: z.number().int().min(1).max(100).default(20).describe("Number of recommendations to return (default 20)"),
       exclude_seed_artists: z.boolean().default(false).describe("Drop tracks by any of the seed artists (default false)"),
       cross_genre: z.enum(["auto", "allow", "strict"]).default("auto").describe("Genre handling (mirrors suggest_next_track): 'auto' (default) re-ranks by genre affinity so a feature-close cross-genre track can't outrank same-genre picks; 'strict' = same genre-family only (off-genre dropped server-side); 'allow' = genre-blind (pure audio-feature cosine)"),
+      min: z.record(z.string(), z.number()).optional().describe(`HARD lower bounds, e.g. {tempo:100, energy:0.5}. Tracks below the bound — and tracks we hold no analysed value for — are dropped. Attributes: ${TUNABLE_ATTRIBUTES.join(", ")}`),
+      max: z.record(z.string(), z.number()).optional().describe(`HARD upper bounds, e.g. {tempo:130}. Same attributes as \`min\`. Combine the two for a range`),
+      target: z.record(z.string(), z.number()).optional().describe(`PREFERRED values, e.g. {energy:0.8}. Tracks nearer the value rank higher; unlike min/max nothing is removed. Same attributes as \`min\``),
     },
   },
-  async ({ seed_tracks, track, artist, limit = 20, exclude_seed_artists = false, cross_genre = "auto" }) => {
+  async ({ seed_tracks, track, artist, limit = 20, exclude_seed_artists = false, cross_genre = "auto", min, max, target }) => {
     const params = new URLSearchParams({
       limit: String(limit),
       exclude_seed_artists: String(exclude_seed_artists),
@@ -767,6 +786,21 @@ server.registerTool(
       if (artist) params.set("artist", artist);
     } else {
       return text('{"error":"Provide either seed_tracks (1-5 catalog itunes_track_ids) or a track name (with optional artist)."}');
+    }
+    // Reject an unknown attribute HERE, not at the API. A client-side guard is what an
+    // MCP caller actually hits, and a tunable that silently vanishes is the exact bug
+    // this feature exists to kill (2026-08-17) — the model would report a filtered list
+    // that was never filtered.
+    for (const [prefix, obj] of [["min", min], ["max", max], ["target", target]]) {
+      for (const [attr, value] of Object.entries(obj || {})) {
+        if (!TUNABLE_ATTRIBUTES.includes(attr)) {
+          return text(JSON.stringify({
+            error: `${prefix}.${attr} is not a tunable attribute — it would be ignored, so nothing was filtered.`,
+            supported: TUNABLE_ATTRIBUTES,
+          }));
+        }
+        params.set(`${prefix}_${attr}`, String(value));
+      }
     }
     return text(await apiGet(`/recommendations?${params}`));
   }
