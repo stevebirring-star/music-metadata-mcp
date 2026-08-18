@@ -58,7 +58,7 @@ Add to `~/.claude/claude_desktop_config.json`:
   "mcpServers": {
     "music-metadata": {
       "command": "npx",
-      "args": ["music-metadata-mcp", "--api-key=sk_live_YOUR_KEY_HERE"]
+      "args": ["music-metadata-mcp", "--api-key=fb_live_YOUR_KEY_HERE"]
     }
   }
 }
@@ -73,7 +73,7 @@ Add to your MCP config (`.cursor/mcp.json` or `.windsurf/mcp.json`):
   "mcpServers": {
     "music-metadata": {
       "command": "npx",
-      "args": ["music-metadata-mcp", "--api-key=sk_live_YOUR_KEY_HERE"]
+      "args": ["music-metadata-mcp", "--api-key=fb_live_YOUR_KEY_HERE"]
     }
   }
 }
@@ -82,7 +82,7 @@ Add to your MCP config (`.cursor/mcp.json` or `.windsurf/mcp.json`):
 ### Environment variable
 
 ```bash
-export MUSIC_API_KEY=sk_live_YOUR_KEY_HERE
+export MUSIC_API_KEY=fb_live_YOUR_KEY_HERE
 npx music-metadata-mcp
 ```
 

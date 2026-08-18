@@ -7,15 +7,15 @@
  * Drop-in replacement for Spotify audio-features in AI workflows.
  *
  * Usage:
- *   npx music-metadata-mcp --api-key=sk_live_...
- *   MUSIC_API_KEY=sk_live_... npx music-metadata-mcp
+ *   npx music-metadata-mcp --api-key=fb_live_...
+ *   MUSIC_API_KEY=fb_live_... npx music-metadata-mcp
  *
  * Add to Claude Desktop (~/.claude/claude_desktop_config.json):
  *   {
  *     "mcpServers": {
  *       "music-metadata": {
  *         "command": "npx",
- *         "args": ["music-metadata-mcp", "--api-key=sk_live_YOUR_KEY"]
+ *         "args": ["music-metadata-mcp", "--api-key=fb_live_YOUR_KEY"]
  *       }
  *     }
  *   }
@@ -38,7 +38,7 @@ const BASE_URL =
 if (!API_KEY) {
   process.stderr.write(
     "[music-metadata-mcp] Error: no API key set.\n" +
-    "Pass --api-key=sk_live_... or set MUSIC_API_KEY env var.\n" +
+    "Pass --api-key=fb_live_... or set MUSIC_API_KEY env var.\n" +
     "Get a free key at https://freqblog.com/music-api.html\n"
   );
   process.exit(1);
