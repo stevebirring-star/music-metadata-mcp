@@ -1,0 +1,45 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+#
+# music-metadata-mcp is a stdio server distributed on npm (`music-metadata-mcp`),
+# talking to the hosted FreqBlog Music API. It carries no state and no local
+# dependencies beyond node, so the only configuration is the API key.
+#
+# A free key (1,000 requests/month) comes from
+# https://freqblog.com/?utm_source=smithery&utm_medium=listing#pricing
+# — the utm tags are load-bearing: they are how a signup arriving from this
+# listing gets attributed, and therefore how we find out whether the listing
+# was worth maintaining.
+
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - musicApiKey
+    properties:
+      musicApiKey:
+        type: string
+        description: >-
+          FreqBlog Music API key (starts with fb_live_). Free tier is 1,000
+          requests/month — get one at
+          https://freqblog.com/?utm_source=smithery&utm_medium=listing#pricing
+      musicApiUrl:
+        type: string
+        default: https://api.freqblog.com
+        description: >-
+          API base URL. Leave unset unless you are pointing at a self-hosted or
+          staging deployment.
+  commandFunction:
+    # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
+    |-
+    (config) => ({
+      command: 'node',
+      args: ['index.js'],
+      env: {
+        MUSIC_API_KEY: config.musicApiKey,
+        ...(config.musicApiUrl ? { MUSIC_API_URL: config.musicApiUrl } : {})
+      }
+    })
+  exampleConfig:
+    musicApiKey: fb_live_example_key_not_a_real_key
