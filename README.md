@@ -1,6 +1,6 @@
 # music-metadata-mcp
 
-MCP server for the [FreqBlog Music API](https://freqblog.com/music-api.html).
+MCP server for the [FreqBlog Music API](https://freqblog.com/?utm_source=github&utm_medium=readme).
 
 Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio features, build harmonic playlists, fetch lyrics, render waveforms, and export DJ-ready files. For reliable, full-catalog results, identify tracks by **name** (+ optional artist) or **ISRC** — a track name alone works, no Spotify account or ISRC needed. MusicBrainz IDs are also accepted. A raw **Spotify track ID** works too, but only for the minority of tracks we've already mapped to a Spotify ID (<1% of the catalog) — it is not a universal Spotify-ID reverse lookup, so prefer name or ISRC.
 
@@ -47,7 +47,7 @@ Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio
 
 ## Quick Start
 
-Get a free API key at [freqblog.com/music-api.html](https://freqblog.com/music-api.html) (1,000 req/month free).
+Get a free API key at [freqblog.com](https://freqblog.com/?utm_source=github&utm_medium=readme#pricing) (1,000 req/month free).
 
 ### Claude Desktop
 
@@ -111,10 +111,10 @@ Once connected, you can ask your AI:
 | Starter | £39/mo | 150,000 |
 | Professional | £129/mo | 750,000 |
 
-[Get your key →](https://freqblog.com/music-api.html)
+[Get your key →](https://freqblog.com/?utm_source=github&utm_medium=readme#pricing)
 
 ## Links
 
-- [API documentation](https://freqblog.com/music-api.html)
+- [API documentation](https://freqblog.com/?utm_source=github&utm_medium=readme)
 - [OpenAPI / Swagger docs](https://api.freqblog.com/docs)
 - [GitHub](https://github.com/stevebirring-star/music-metadata-mcp)
