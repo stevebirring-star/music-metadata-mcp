@@ -2,14 +2,14 @@
 
 MCP server for the [FreqBlog Music API](https://freqblog.com/?utm_source=github&utm_medium=readme).
 
-Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio features, build harmonic playlists, fetch lyrics, render waveforms, and export DJ-ready files. For reliable, full-catalog results, identify tracks by **name** (+ optional artist) or **ISRC** — a track name alone works, no Spotify account or ISRC needed. MusicBrainz IDs are also accepted. A raw **Spotify track ID** works too, but only for the minority of tracks we've already mapped to a Spotify ID (<1% of the catalog) — it is not a universal Spotify-ID reverse lookup, so prefer name or ISRC.
+Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio features, build harmonic playlists, fetch lyrics, render waveforms, and export DJ-ready files. For reliable, full-catalog results, identify tracks by **name** (+ optional artist) or **ISRC** — a track name alone works, no Spotify account or ISRC needed. MusicBrainz IDs are also accepted. A raw **Spotify track ID** works too — resolved from our Spotify-ID map or, on a miss, by matching the track's title — but a title several artists share is ambiguous and misses rather than guessing, so it is not a universal Spotify-ID reverse lookup: prefer name or ISRC.
 
 ## Tools (v2.16.0 — 23 total)
 
 ### Core lookup
 | Tool | Description |
 |------|-------------|
-| `lookup_track` | BPM, key, mood, genre, danceability, energy and 30+ more — best by track name (+ optional artist) or ISRC, which search the full catalog and queue an on-demand fetch + analysis on a miss; also accepts a MusicBrainz ID, or a Spotify track ID for the minority of tracks already mapped to one (<1% — prefer name/ISRC). Covers 1.1 million+ pre-analyzed tracks + 7.5M fallback via MusicBrainz/AcousticBrainz (`GET /cache/stats` returns the live count). Features come from a track's commercial streaming preview audio, so a track with no streaming release we can reach (CD-only, unreleased, or off-streaming) returns a clear "not available" result rather than data — there's no audio to analyse |
+| `lookup_track` | BPM, key, mood, genre, danceability, energy and 30+ more — best by track name (+ optional artist) or ISRC, which search the full catalog and queue an on-demand fetch + analysis on a miss; also accepts a MusicBrainz ID, or a Spotify track ID (resolved from our ID map or by title match; ambiguous titles miss rather than guess — prefer name/ISRC). Covers 1.1 million+ pre-analyzed tracks + 7.5M fallback via MusicBrainz/AcousticBrainz (`GET /cache/stats` returns the live count). Features come from a track's commercial streaming preview audio, so a track with no streaming release we can reach (CD-only, unreleased, or off-streaming) returns a clear "not available" result rather than data — there's no audio to analyse |
 | `search_tracks` | Full-text search across the catalog (FTS5-backed) |
 | `bulk_lookup` | Look up up to 50 tracks (by name or ISRC) in one request |
 | `find_tracks_by_bpm` | Find tracks within ±tolerance of a target BPM |
@@ -100,7 +100,7 @@ Once connected, you can ask your AI:
 - *"Which artists are similar to Van Halen?"* — get_related_artists derives an artist graph (Spotify related-artists replacement)
 - *"Order these 12 tracks into a peak-time set and export it for Rekordbox"* — build_setlist then export_playlist
 - *"Tag this track and tell me how confident each tag is"* — tag_track returns a compact tag list where every tag is labelled with its confidence + provenance (measured / derived / model-estimated / catalog-genre)
-- *"Get the audio features for ISRC USUM71900001"* — name or ISRC give the best coverage; a MusicBrainz recording ID also works, and a Spotify track ID resolves only for tracks we've already mapped to one (if your own Spotify integration already gives you the ISRC, pass that instead)
+- *"Get the audio features for ISRC USUM71900001"* — name or ISRC give the best coverage; a MusicBrainz recording ID also works, and a Spotify track ID resolves from our ID map or by matching its title, and misses when several artists share that title (if your own Spotify integration already gives you the ISRC, pass that instead — it's exact)
 
 ## API key tiers
 
