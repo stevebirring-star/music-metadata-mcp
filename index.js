@@ -21,9 +21,20 @@
  *   }
  */
 
+import { readFileSync } from "node:fs";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+
+// Version is read from package.json, never hardcoded. It WAS hardcoded in two places
+// and drifted: package.json (and the published npm tarball) said 2.16.1 while the
+// server advertised 2.16.0 to every client and printed it on stderr. A version a
+// client cannot trust is worse than no version, and nothing here would have caught it
+// — so there is now exactly one place to change. npm always ships package.json in the
+// tarball regardless of the `files` allowlist, so this resolves for installed users too.
+const PKG_VERSION = JSON.parse(
+  readFileSync(new URL("./package.json", import.meta.url), "utf8"),
+).version;
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -123,7 +134,7 @@ const TUNABLE_ATTRIBUTES = [
 // ── Server ────────────────────────────────────────────────────────────────────
 
 const server = new McpServer(
-  { name: "music-metadata", version: "2.16.0" },
+  { name: "music-metadata", version: PKG_VERSION },
   {
     capabilities: { tools: {} },
     instructions:
@@ -985,4 +996,4 @@ server.registerTool(
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-process.stderr.write("[music-metadata-mcp] Server running on stdio (v2.16.0 — 23 tools)\n");
+process.stderr.write(`[music-metadata-mcp] Server running on stdio (v${PKG_VERSION} — 23 tools)\n`);
