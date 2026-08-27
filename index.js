@@ -251,7 +251,7 @@ server.registerTool(
     annotations: { title: "Find Tracks by BPM", readOnlyHint: true, openWorldHint: true },
     description:
       "Find pre-analyzed tracks within a BPM range. " +
-      "Results ordered by proximity to target BPM then by popularity. " +
+      "Results ordered by proximity to target BPM then by an internal catalogue ordering key (not an audience metric). " +
       "Useful for DJ set planning, workout playlist building, and tempo-matching.",
     inputSchema: {
       bpm: z
@@ -295,7 +295,7 @@ server.registerTool(
     description:
       "Find pre-analyzed tracks in a specific musical key. " +
       "Accepts Camelot notation (e.g. '8A'), Open Key (e.g. '1m'), or key name (e.g. 'A-Minor'). " +
-      "Results ordered by popularity. Perfect for harmonic mixing and key-locked playlists.",
+      "Results ordered by an internal catalogue ordering key (not an audience metric). Perfect for harmonic mixing and key-locked playlists.",
     inputSchema: {
       key: z
         .string()
@@ -389,7 +389,7 @@ server.registerTool(
     description:
       "Full-text search across the catalog by track / artist / album. Returns " +
       "lightweight track stubs (no audio features) ranked by FTS5 BM25 relevance " +
-      "then popularity. Use this when you don't have an exact track name — pass " +
+      "then by an internal catalogue ordering key (not an audience metric). Use this when you don't have an exact track name — pass " +
       "any tokens and we prefix-match. Then call lookup_track for full features. " +
       "Each hit carries a `seedable` boolean: only seedable:true ids can seed the " +
       "set-builder tools (recommendations / next-track / setlist / transition), " +
@@ -763,6 +763,8 @@ server.registerTool(
       "TUNING: `min`/`max` are HARD filters and `target` is a preference (nearer ranks higher, " +
       "nothing removed) over these attributes — acousticness, danceability, duration_ms, energy, " +
       "instrumentalness, liveness, loudness, popularity, speechiness, tempo, valence. " +
+      "NOTE: `popularity` is under review — it reflects how a track entered our catalogue, " +
+      "not audience size, so don't filter on it in new integrations. " +
       "e.g. min={tempo:100}, max={tempo:130}, target={energy:0.8} for energetic 100-130 BPM tracks. " +
       "When you tune, the response adds a `filters` block saying what applied, how many tracks each " +
       "bound removed (`dropped_by`) and whether the bounds ran out of catalogue before `limit` " +
