@@ -128,7 +128,7 @@ function plain(content) {
 // anything else, and this list is what lets us say so before spending the call.
 const TUNABLE_ATTRIBUTES = [
   "acousticness", "danceability", "duration_ms", "energy", "instrumentalness",
-  "liveness", "loudness", "popularity", "speechiness", "tempo", "valence",
+  "liveness", "loudness", "speechiness", "tempo", "valence",
 ];
 
 // ── Server ────────────────────────────────────────────────────────────────────
@@ -762,9 +762,9 @@ server.registerTool(
       "both are given. " +
       "TUNING: `min`/`max` are HARD filters and `target` is a preference (nearer ranks higher, " +
       "nothing removed) over these attributes — acousticness, danceability, duration_ms, energy, " +
-      "instrumentalness, liveness, loudness, popularity, speechiness, tempo, valence. " +
-      "NOTE: `popularity` is under review — it reflects how a track entered our catalogue, " +
-      "not audience size, so don't filter on it in new integrations. " +
+      "instrumentalness, liveness, loudness, speechiness, tempo, valence. " +
+      "NOTE: `popularity` was RETIRED as a tunable on 2026-08-27 and now returns a 400 — it " +
+      "recorded how a track entered our catalogue, not audience size. The field is still returned. " +
       "e.g. min={tempo:100}, max={tempo:130}, target={energy:0.8} for energetic 100-130 BPM tracks. " +
       "When you tune, the response adds a `filters` block saying what applied, how many tracks each " +
       "bound removed (`dropped_by`) and whether the bounds ran out of catalogue before `limit` " +
