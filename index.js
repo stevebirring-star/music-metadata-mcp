@@ -387,7 +387,9 @@ server.registerTool(
     title: "Search Tracks",
     annotations: { title: "Search Tracks", readOnlyHint: true, openWorldHint: true },
     description:
-      "Full-text search across the catalog by track / artist / album. Returns " +
+      "Full-text search across the catalog by track / artist / album. Each hit carries " +
+      "`chart_peak` (1-100, 100 = a number-one; null = no placement we hold — treat as " +
+      "UNKNOWN, not unpopular; it is NOT audience size). Returns " +
       "lightweight track stubs (no audio features) ranked by FTS5 BM25 relevance " +
       "then by an internal catalogue ordering key (not an audience metric). Use this when you don't have an exact track name — pass " +
       "any tokens and we prefix-match. Then call lookup_track for full features. " +
