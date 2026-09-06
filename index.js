@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * music-metadata-mcp
- * MCP server for the Music Metadata API (https://freqblog.com/music-api.html)
+ * MCP server for the Music Metadata API (https://freqblog.com/)
  *
  * Exposes BPM, key, mood, genre and 30+ audio features through 23 MCP tools.
  * Drop-in replacement for Spotify audio-features in AI workflows.
@@ -50,7 +50,7 @@ if (!API_KEY) {
   process.stderr.write(
     "[music-metadata-mcp] Error: no API key set.\n" +
     "Pass --api-key=fb_live_... or set MUSIC_API_KEY env var.\n" +
-    "Get a free key at https://freqblog.com/music-api.html\n"
+    "Get a free key at https://freqblog.com/#pricing\n"
   );
   process.exit(1);
 }
@@ -180,8 +180,10 @@ server.registerTool(
       "and returned shortly. A raw Spotify ID is resolved from our Spotify-ID map, or on a miss by " +
       "matching the track's title; a title several artists share is ambiguous and misses " +
       "rather than guessing — not a universal Spotify-ID reverse lookup. " +
-      "Covers 1.1 million+ pre-analyzed tracks (instant) plus 7.5M+ via MusicBrainz + " +
-      "AcousticBrainz fallback; GET /cache/stats returns the live count. " +
+      "Covers 800k+ fully analysed tracks (instant) plus 7.5M+ via MusicBrainz + " +
+      "AcousticBrainz fallback; GET /cache/stats returns the live count as " +
+      "tracks_analyzed (tracks_indexed is the larger catalogue, much of which is " +
+      "not yet analysed). " +
       "Drop-in replacement for Spotify audio-features.",
     inputSchema: {
       track: z
@@ -935,7 +937,7 @@ server.registerTool(
       "MusicBrainz recording ID (mbid), a Spotify track ID, or a catalog track_id " +
       "(itunes_track_id from any prior response); sending several is fine — they resolve by " +
       "precedence (track > isrc > track_id > mbid > spotify_id). The broad, reliable coverage is the MEASURED tags " +
-      "from our Essentia analysis over the analysed catalogue (~178k+ tracks, plus on-demand by " +
+      "from our Essentia analysis over the analysed catalogue (800k+ tracks, plus on-demand by " +
       "name); MBID/ISRC additionally reach 7.5M+ AcousticBrainz recordings WHEN you supply that " +
       "identifier. For the full numeric feature set use lookup_track; for nearest tracks use " +
       "find_similar_tracks. Returns { track, count, tags, disclaimer }.",
