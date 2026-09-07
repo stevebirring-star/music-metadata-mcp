@@ -4,7 +4,7 @@ MCP server for the [FreqBlog Music API](https://freqblog.com/?utm_source=github&
 
 Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio features, build harmonic playlists, fetch lyrics, render waveforms, and export DJ-ready files. For reliable, full-catalog results, identify tracks by **name** (+ optional artist) or **ISRC** — a track name alone works, no Spotify account or ISRC needed. MusicBrainz IDs are also accepted. A raw **Spotify track ID** works too — resolved from our Spotify-ID map or, on a miss, by matching the track's title — but a title several artists share is ambiguous and misses rather than guessing, so it is not a universal Spotify-ID reverse lookup: prefer name or ISRC.
 
-## Tools (v2.16.3 — 23 total)
+## Tools (v2.16.4 — 23 total)
 
 ### Core lookup
 | Tool | Description |
