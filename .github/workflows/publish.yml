@@ -48,7 +48,17 @@ jobs:
         with:
           # Trusted publishing needs Node >= 22.14.0.
           node-version: '22'
-          registry-url: 'https://registry.npmjs.org'
+          # ⚠⚠ NO `registry-url:` HERE, DELIBERATELY — DO NOT ADD IT BACK.
+          # setup-node reacts to that input by writing
+          #     //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
+          # into a temp .npmrc. With no token set (which is the entire point of OIDC)
+          # the placeholder expands to EMPTY, npm reads the line, concludes auth is
+          # already configured, and never starts the OIDC exchange — publishing dies
+          # with ENEEDAUTH. That reads exactly like a broken trusted publisher, so it
+          # sends you back to minting tokens, which is the thing this workflow exists
+          # to stop. npm already defaults to registry.npmjs.org, so the input buys
+          # nothing here. Open upstream: npm/documentation#1960, actions/setup-node#1551
+          # — npm's own documented example still carries this bug.
 
       - name: Ensure npm supports trusted publishing
         # Node 22 ships npm 10.x; OIDC needs >= 11.5.1. Pinned to a major rather than a
@@ -69,6 +79,37 @@ jobs:
             }
             console.log("npm OK for OIDC: " + v);
           ' "$(npm --version)"
+
+      - name: Assert nothing is impersonating a credential
+        # The ENEEDAUTH trap above is invisible until publish time and misattributes
+        # itself to the trusted-publisher config. Catch it here, where the message can
+        # say what is actually wrong.
+        # ⚠ Detection is via PLAIN `npm config list`, not `--json`: npm treats
+        # _authToken as protected, so it is omitted from the JSON entirely and
+        # `npm config get` on it errors. The text listing is the only surface that
+        # admits the key exists. Verified against npm 10 and 11 — a --json check looks
+        # correct, passes everywhere, and detects nothing.
+        # ⚠ Only the key is ever printed, never the value.
+        run: |
+          node -e '
+            const { execSync } = require("node:child_process");
+            const reg = execSync("npm config get registry").toString().trim();
+            if (reg !== "https://registry.npmjs.org/") {
+              console.error("registry is " + reg + ", expected https://registry.npmjs.org/");
+              process.exit(1);
+            }
+            const lines = execSync("npm config list").toString().split("\n")
+              .filter(l => l.includes("_authToken"))
+              .map(l => l.split("=")[0].trim());
+            if (lines.length) {
+              console.error("An _authToken is configured: " + lines.join(", "));
+              console.error("npm uses it instead of OIDC and publishing fails ENEEDAUTH.");
+              console.error("Usually means setup-node regained a registry-url input.");
+              process.exit(1);
+            }
+            console.log("registry OK: " + reg);
+            console.log("no _authToken configured - the OIDC exchange will run");
+          '
 
       - name: Install dependencies
         run: npm ci
