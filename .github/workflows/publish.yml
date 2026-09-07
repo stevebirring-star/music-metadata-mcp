@@ -1,0 +1,91 @@
+# Publish music-metadata-mcp to npm via TRUSTED PUBLISHING (OIDC) — no stored token.
+#
+# ⚠⚠ THE FILENAME IS PART OF THE CREDENTIAL. npm matches this workflow by name against
+# the trusted-publisher config on npmjs.com, case-sensitively and including the `.yml`.
+# Renaming or moving this file silently breaks publishing until the config is updated
+# to match — the failure looks like an auth error, not a missing file.
+#
+# WHY THIS EXISTS: publishing used to need a long-lived npm token in ~/.npmrc on the
+# prod box. It expired 2026-09-06 and left 2.16.3 fixed-in-git-but-unpublished for a
+# day; rotating it needs an interactive TTY, so it could not be done from an agent
+# session. OIDC removes the credential entirely — nothing to expire, nothing to leak.
+# It is also the migration path npm is forcing: 2FA-bypass tokens lose direct publish
+# around January 2027 (changelog 2026-07-08).
+#
+# THIS CONFIG IS STAGE-ONLY, which is npm's default for configs created after
+# 2026-09-03 and their explicit recommendation. `npm stage publish` uploads the version
+# in a non-public state; a human then approves it on npmjs.com once malware scanning
+# finishes. ⚠ `npm publish` is REJECTED by a stage-only config — if you ever opt into
+# direct publishing on npmjs.com, change the command below to match, not the other way
+# round. ⚠ `npm stage approve` requires proof-of-presence and CANNOT use OIDC, so the
+# approval is deliberately not automatable here. That is the point of it.
+name: publish
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+# One publish at a time. Two tags pushed together would otherwise race on the same
+# version and produce a confusing half-failure.
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # The whole mechanism. Without id-token:write GitHub issues no OIDC token and
+      # npm falls back to looking for a credential that no longer exists.
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Trusted publishing needs Node >= 22.14.0.
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Ensure npm supports trusted publishing
+        # Node 22 ships npm 10.x; OIDC needs >= 11.5.1. Pinned to a major rather than a
+        # fixed patch so security fixes arrive, and ASSERTED rather than assumed — a
+        # silently-old npm fails later with an auth error that reads like a misconfigured
+        # trusted publisher, which is a much worse hour than a clear version failure here.
+        run: |
+          npm install -g npm@^11
+          node --version
+          npm --version
+          node -e '
+            const v = process.argv[1];
+            const [a, b, c] = v.split(".").map(Number);
+            const ok = a > 11 || (a === 11 && (b > 5 || (b === 5 && c >= 1)));
+            if (!ok) {
+              console.error("npm " + v + " is below the 11.5.1 minimum for OIDC publishing");
+              process.exit(1);
+            }
+            console.log("npm OK for OIDC: " + v);
+          ' "$(npm --version)"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check the version is coherent before shipping it
+        # Three drift guards, each for a failure this package has actually had.
+        run: node .github/scripts/check-release.mjs
+        env:
+          RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+
+      - name: Stage the release
+        # Provenance is generated automatically for a public repo publishing a public
+        # package — no --provenance flag needed.
+        run: npm stage publish
+
+      - name: What happens next
+        run: |
+          echo "Staged. It is NOT public yet."
+          echo "Approve it at https://www.npmjs.com/package/music-metadata-mcp/access"
+          echo "(the approve button enables once malware scanning finishes)."
