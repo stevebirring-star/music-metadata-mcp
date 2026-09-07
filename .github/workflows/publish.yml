@@ -42,9 +42,9 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           # Trusted publishing needs Node >= 22.14.0.
           node-version: '22'
@@ -59,6 +59,10 @@ jobs:
           # to stop. npm already defaults to registry.npmjs.org, so the input buys
           # nothing here. Open upstream: npm/documentation#1960, actions/setup-node#1551
           # — npm's own documented example still carries this bug.
+          # ⚠ setup-node v7 removed that dummy NODE_AUTH_TOKEN export, so on v7 this
+          # is belt-and-braces rather than load-bearing. Keep it anyway: the input
+          # still buys nothing, and a pin back to v4/v5/v6 would re-arm the trap
+          # silently. The guard below is what actually holds the line.
 
       - name: Ensure npm supports trusted publishing
         # Node 22 ships npm 10.x; OIDC needs >= 11.5.1. Pinned to a major rather than a
