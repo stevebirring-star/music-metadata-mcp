@@ -1,0 +1,26 @@
+# Keep the build context to the handful of files the image actually needs.
+#
+# Without this the context is ~29 MB — 26 MB of node_modules and 2.2 MB of .git —
+# against 136 KB of tracked source. None of it reaches the image (the Dockerfile
+# COPYs three named files and runs its own `npm ci`), it is all just uploaded to
+# the daemon and discarded.
+#
+# This matters more than it looks: Glama builds this image in a sandboxed
+# microVM to introspect the server, and that build is the gate on the whole
+# listing — no build means no tools/list, no recorded schema, and no quality
+# score. A context two orders of magnitude larger than it needs to be is pure
+# risk for no benefit.
+#
+# ⚠ node_modules especially: copying a host-built tree into a Linux image is how
+# you ship native modules built for the wrong platform. `npm ci` inside the
+# image is the only correct source of dependencies.
+
+node_modules/
+.git/
+.github/
+*.log
+npm-debug.log*
+.env
+.env.*
+*.tgz
+.DS_Store
