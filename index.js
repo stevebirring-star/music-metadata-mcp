@@ -339,7 +339,8 @@ server.registerTool(
       "found:false and backfill_status 'over_limit', and an item missing BOTH track and isrc comes " +
       "back 'invalid_no_query' — neither is processed or charged. The response 'skipped' field counts " +
       "them, so split a long list into calls of <=50 and resubmit any skipped rows (up to 200 accepted per call). " +
-      "Billed per item that returns features or queues an on-demand ingest; an ISRC/name with no match anywhere is free. " +
+      "Billed per item that returns features or queues an on-demand ingest; an ISRC/name with no match anywhere is free. "
+      + "A track you queue and then collect costs one unit, not two — the call that collects it is free. " +
       "Returns found/not_found/skipped counts alongside individual results (each echoes back its isrc).",
     inputSchema: {
       tracks: z
