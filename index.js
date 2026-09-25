@@ -468,15 +468,20 @@ server.registerTool(
     annotations: { title: "List Tracks in a Genre", readOnlyHint: true, openWorldHint: true },
     description:
       "List catalog tracks tagged with a specific genre. Discover available genre names " +
-      "via list_genres. Paginated.",
+      "via list_genres (each entry shows its parent_genres). Set include_subgenres to also " +
+      "return every subgenre of a top-level genre, e.g. latin + urbano latino, pop latino, " +
+      "música mexicana. Paginated.",
     inputSchema: {
       genre: z.string().min(1).max(100).describe("Genre name (case-insensitive)"),
       limit: z.number().int().min(1).max(100).default(20).describe("Max tracks per page (default 20)"),
       offset: z.number().int().min(0).default(0).describe("Pagination offset"),
+      include_subgenres: z.boolean().default(false).describe(
+        "Also include every subgenre of this genre in Apple's genre hierarchy (default false)"),
     },
   },
-  async ({ genre, limit = 20, offset = 0 }) => {
+  async ({ genre, limit = 20, offset = 0, include_subgenres = false }) => {
     const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+    if (include_subgenres) params.set("include_subgenres", "true");
     return text(await apiGet(`/genres/${encodeURIComponent(genre)}/tracks?${params}`));
   }
 );
