@@ -128,8 +128,9 @@ function plain(content) {
 // anything else, and this list is what lets us say so before spending the call.
 const TUNABLE_ATTRIBUTES = [
   "acousticness", "danceability", "duration_ms", "energy", "instrumentalness",
-  "loudness", "speechiness", "tempo", "valence",
-];  // `liveness` retired 2026-09-26 (API returns it as null for our analyses; 400s as a tunable)
+  "loudness", "tempo", "valence",
+];  // `liveness` + `speechiness` retired 2026-09-26 (API returns them as null for our own
+    // analyses; 400s as a tunable)
 
 // ── Server ────────────────────────────────────────────────────────────────────
 
@@ -184,6 +185,11 @@ server.registerTool(
       "AcousticBrainz fallback; GET /cache/stats returns the live count as " +
       "tracks_analyzed (tracks_indexed is the larger catalogue, much of which is " +
       "not yet analysed). " +
+      "VALUES are FreqBlog's own (NOT on Spotify's scale): energy, danceability and valence are " +
+      "on our own raw scale, so derive thresholds from our values rather than copying " +
+      "Spotify-tuned ones; acousticness is the AcousticBrainz classifier where available, else " +
+      "our estimate; instrumentalness is AcousticBrainz where available, else null; " +
+      "speechiness and liveness are null for our own analyses. " +
       "Drop-in replacement for Spotify audio-features.",
     inputSchema: {
       track: z
@@ -774,10 +780,12 @@ server.registerTool(
       "both are given. " +
       "TUNING: `min`/`max` are HARD filters and `target` is a preference (nearer ranks higher, " +
       "nothing removed) over these attributes — acousticness, danceability, duration_ms, energy, " +
-      "instrumentalness, loudness, speechiness, tempo, valence. " +
-      "NOTE: `popularity` (2026-08-27) and `liveness` (2026-09-26) are RETIRED as tunables and " +
-      "return a 400 — popularity recorded how a track entered our catalogue, not audience size; " +
-      "liveness is returned as null for our own analyses because our estimate was not reliable. " +
+      "instrumentalness, loudness, tempo, valence. " +
+      "NOTE: `popularity` (2026-08-27), `liveness` and `speechiness` (both 2026-09-26) are RETIRED " +
+      "as tunables and return a 400 — popularity recorded how a track entered our catalogue, not " +
+      "audience size; liveness and speechiness are returned as null for our own analyses. " +
+      "energy/danceability/valence are on FreqBlog's own scale (not Spotify's) — derive thresholds " +
+      "from our values rather than reusing Spotify-tuned ones. " +
       "e.g. min={tempo:100}, max={tempo:130}, target={energy:0.8} for energetic 100-130 BPM tracks. " +
       "When you tune, the response adds a `filters` block saying what applied, how many tracks each " +
       "bound removed (`dropped_by`) and whether the bounds ran out of catalogue before `limit` " +
