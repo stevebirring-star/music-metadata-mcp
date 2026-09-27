@@ -4,7 +4,7 @@ MCP server for the [FreqBlog Music API](https://freqblog.com/?utm_source=github&
 
 Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio features, build harmonic playlists, fetch lyrics, render waveforms, and export DJ-ready files. For reliable, full-catalog results, identify tracks by **name** (+ optional artist) or **ISRC** — a track name alone works, no Spotify account or ISRC needed. MusicBrainz IDs are also accepted. A raw **Spotify track ID** works too — resolved from our Spotify-ID map or, on a miss, by matching the track's title — but a title several artists share is ambiguous and misses rather than guessing, so it is not a universal Spotify-ID reverse lookup: prefer name or ISRC.
 
-## Tools (v2.17.0 — 23 total)
+## Tools (v2.17.1 — 23 total)
 
 ### Core lookup
 | Tool | Description |
@@ -15,13 +15,13 @@ Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio
 | `find_tracks_by_bpm` | Find tracks within ±tolerance of a target BPM |
 | `find_tracks_by_key` | Find tracks by key — Camelot (8A), Open Key (1m), or name (A-Minor) |
 
-> **About the values (2026-09-26):** audio features are FreqBlog's own analysis and are **not** on Spotify's scale. `energy`, `danceability` and `valence` use our own raw scale — derive thresholds from our values rather than reusing Spotify-tuned ones. `acousticness` comes from the AcousticBrainz classifier where available, else our own estimate; `instrumentalness` comes from AcousticBrainz where available, else `null`; `speechiness` and `liveness` are `null` for our own analyses.
+> **About the values (2026-09-27):** audio features are FreqBlog's own analysis and are **not** on Spotify's scale. `energy` and `valence` use our own raw scale — derive thresholds from our values rather than reusing Spotify-tuned ones. `acousticness` and `danceability` come from the AcousticBrainz classifier where available, else a model that listens to the preview (built on PANNs embeddings, CC BY 4.0; rolling out since 2026-09-27). `instrumentalness`, `speechiness` and `liveness` are currently `null` for catalogue tracks.
 
 ### Recommendations & DJ tools
 | Tool | Description |
 |------|-------------|
 | `find_similar_tracks` | Cosine-similarity recommendation engine over the entire catalog |
-| `get_recommendations` | Spotify `/v1/recommendations` replacement — blend up to 5 seed tracks (or seed by `track`+`artist` name), genre-aware ranking. Tune with `min`/`max` (hard filters) and `target` (preference) over tempo, energy, valence, danceability, acousticness, instrumentalness, loudness, duration_ms (`popularity`, `liveness` and `speechiness` are retired and return 400). Costs 2 units |
+| `get_recommendations` | Spotify `/v1/recommendations` replacement — blend up to 5 seed tracks (or seed by `track`+`artist` name), genre-aware ranking. Tune with `min`/`max` (hard filters) and `target` (preference) over tempo, energy, valence, danceability, acousticness, loudness, duration_ms (`popularity`, `liveness`, `speechiness` and `instrumentalness` are retired and return 400). Costs 2 units |
 | `get_related_artists` | Spotify related-artists replacement — derived artist graph from audio-feature similarity. Costs 2 units |
 | `build_radio_playlist` | Harmonic + BPM-continuity DJ playlist from a seed track |
 | `score_transition` | Score how well one track mixes into another (0-100): harmonic + octave-aware BPM + energy. Costs 1 unit |
