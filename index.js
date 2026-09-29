@@ -171,16 +171,17 @@ server.registerTool(
     annotations: { title: "Look Up Track Audio Features", readOnlyHint: true, openWorldHint: true },
     description:
       "Look up audio features for a track — BPM, musical key, mood, genre, danceability, " +
-      "energy, acousticness, instrumentalness and 30+ more — including `chart_peak`, the best " +
+      "energy, acousticness and 30+ more — including `chart_peak`, the best " +
       "chart position we hold (1-100, 100 = a number-one; null = none held, meaning UNKNOWN " +
       "rather than unpopular, and NOT audience size). Provide AT LEAST ONE of: a track " +
       "name (optionally with artist), an ISRC, a MusicBrainz recording ID (mbid), or a Spotify " +
       "track ID — if you know several, send them all rather than choosing; they resolve by " +
       "precedence (track > isrc > mbid > spotify_id) and the rest are ignored. For reliable coverage, identify by track name (+artist) or ISRC: a name miss " +
       "queues an on-demand fetch + analysis so even tracks not yet in the catalog get ingested " +
-      "and returned shortly. A raw Spotify ID is resolved from our Spotify-ID map, or on a miss by " +
-      "matching the track's title; a title several artists share is ambiguous and misses " +
-      "rather than guessing — not a universal Spotify-ID reverse lookup. " +
+      "and returned shortly. A raw Spotify ID is resolved per request: we read the track's " +
+      "title from Spotify's public embed page and match it against our catalogue (no Spotify " +
+      "IDs are stored); a title several artists share is ambiguous and misses rather than " +
+      "guessing — not a universal Spotify-ID reverse lookup. " +
       "Covers 800k+ fully analysed tracks (instant) plus 7.5M+ via MusicBrainz + " +
       "AcousticBrainz fallback; GET /cache/stats returns the live count as " +
       "tracks_analyzed (tracks_indexed is the larger catalogue, much of which is " +
@@ -218,7 +219,7 @@ server.registerTool(
         .string()
         .max(80)
         .optional()
-        .describe("Spotify track ID (also accepts a spotify:track: URI or an open.spotify.com URL). Resolved from our Spotify-ID map or, on a miss, by matching the track's title — a title several artists share is ambiguous and 404s rather than guessing, so it is still not a universal Spotify-ID reverse lookup. For reliable coverage, look up by `track` (+ `artist`) or by `isrc` instead; if your own Spotify app already gives you the track's external_ids.isrc, pass that as `isrc`."),
+        .describe("Spotify track ID (also accepts a spotify:track: URI or an open.spotify.com URL). Resolved per request by reading the track's title from Spotify's public embed page and matching it against our catalogue (no Spotify IDs are stored) — a title several artists share is ambiguous and 404s rather than guessing, so it is still not a universal Spotify-ID reverse lookup. For reliable coverage, look up by `track` (+ `artist`) or by `isrc` instead; if your own Spotify app already gives you the track's external_ids.isrc, pass that as `isrc`."),
     },
   },
   async ({ track, artist, isrc, mbid, spotify_id }) => {
@@ -942,7 +943,8 @@ server.registerTool(
     annotations: { title: "Tag Track", readOnlyHint: true, openWorldHint: true },
     description:
       "Get a compact, HONESTLY-LABELLED tag list for a track — energy / danceability / valence / " +
-      "acousticness / instrumentalness, plus a mood tag and a broad genre tag. It is a tag-shaped " +
+      "acousticness, plus a mood tag and a broad genre tag (instrumentalness is currently null, " +
+      "so it is not tagged). It is a tag-shaped " +
       "projection of the same open-data analysis lookup_track returns (no audio upload, no extra " +
       "compute), so it costs the same 1 quota unit and is charged only on a served result. The " +
       "differentiator vs opaque taggers (e.g. Cyanite) is that EVERY tag carries its own " +
@@ -984,7 +986,7 @@ server.registerTool(
         .string()
         .max(80)
         .optional()
-        .describe("Spotify track ID (also accepts a spotify:track: URI or open.spotify.com URL). Resolved from our Spotify-ID map or, on a miss, by matching the track's title — a title several artists share is ambiguous and misses rather than guessing; prefer track (+artist) or isrc."),
+        .describe("Spotify track ID (also accepts a spotify:track: URI or open.spotify.com URL). Resolved per request by reading the track's title from Spotify's public embed page and matching it against our catalogue (no Spotify IDs are stored) — a title several artists share is ambiguous and misses rather than guessing; prefer track (+artist) or isrc."),
       track_id: z
         .string()
         .min(1)
