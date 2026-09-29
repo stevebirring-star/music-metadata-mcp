@@ -922,7 +922,7 @@ server.registerTool(
       "SVG waveform render of the track's 30-second iTunes preview. 120 RMS-bucketed " +
       "bars themable via CSS currentColor. Returns the SVG markup as text — embed " +
       "directly in HTML or save to a .svg file. Catalog tracks with numeric iTunes ids " +
-      "only; synthetic ids (mb:/fma:/msd:) return 404.",
+      "only; synthetic ids (mb:) return 404.",
     inputSchema: {
       track_id: z.string().min(1).max(80).describe("Numeric catalog itunes_track_id"),
       w: z.number().int().min(120).max(2400).default(600).describe("Width in px"),
