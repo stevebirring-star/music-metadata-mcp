@@ -735,7 +735,7 @@ server.registerTool(
       "arc, keeping each consecutive transition harmonically and tempo-smooth. arc is one of " +
       "peak_time (default — builds to a peak then eases), warmup, cooldown, or flat. Returns " +
       "the tracks in play order, the per-step transition scores + reasons, an overall flow_score " +
-      "(0-100), and any ids not found in the catalog (omitted). Pipe tracks[].itunes_track_id " +
+      "(0-100), and any ids not found in the catalog or not yet analysed (omitted). Pipe tracks[].itunes_track_id " +
       "straight into export_playlist for a ready-to-mix Rekordbox/Serato file. track_ids are " +
       "catalog itunes_track_ids. Costs 5 quota units.",
     inputSchema: {
