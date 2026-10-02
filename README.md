@@ -4,7 +4,7 @@ MCP server for the [FreqBlog Music API](https://freqblog.com/?utm_source=github&
 
 Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio features, build harmonic playlists, fetch lyrics, render waveforms, and export DJ-ready files. For reliable, full-catalog results, identify tracks by **name** (+ optional artist) or **ISRC** — a track name alone works, no Spotify account or ISRC needed. MusicBrainz IDs are also accepted. A raw **Spotify track ID** works too — resolved per request by reading the track's title from Spotify's public embed page and matching it against our catalogue (we store no Spotify IDs; a resolution is remembered in memory for at most 24h) — but a title several artists share is ambiguous and misses rather than guessing, so it is not a universal Spotify-ID reverse lookup: prefer name or ISRC.
 
-## Tools (v2.17.3 — 23 total)
+## Tools (v2.17.4 — 23 total)
 
 ### Core lookup
 | Tool | Description |
@@ -43,7 +43,7 @@ Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio
 |------|-------------|
 | `tag_track` | Compact, honestly-labelled tag list (energy/danceability/valence/acousticness + mood + genre) — a tag-shaped projection of `lookup_track`, every tag carrying its own confidence + provenance. Costs 1 unit |
 | `track_embedding` | 18-dim numeric vector for ML / similarity / clustering |
-| `track_artwork_url` | Resolved cover-art image URL (iTunes / Cover Art Archive) |
+| `track_artwork_url` | Resolved cover-art image URL (catalogue artwork / Cover Art Archive) |
 | `track_lyrics` | Synced + plain lyrics via the open LRClib dataset |
 | `track_waveform_svg` | SVG waveform render of the track's 30-second preview |
 

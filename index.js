@@ -209,7 +209,7 @@ server.registerTool(
         .string()
         .max(15)
         .optional()
-        .describe("ISRC, e.g. USUM71900001. Catalog is checked first, then MusicBrainz/Deezer resolve the recording on a miss."),
+        .describe("ISRC, e.g. USUM71900001. Matched exactly first; on a miss the recording is resolved and queued for analysis."),
       mbid: z
         .string()
         .max(40)
@@ -877,7 +877,7 @@ server.registerTool(
     title: "Get Track Artwork URL",
     annotations: { title: "Get Track Artwork URL", readOnlyHint: true, openWorldHint: true },
     description:
-      "Get a cover-art image URL for a track. Resolves via iTunes Lookup for numeric " +
+      "Get a cover-art image URL for a track. Resolves catalogue artwork for numeric " +
       "catalog ids, or Cover Art Archive via MBID for the rest. Returns the final " +
       "image URL string (the API endpoint 302-redirects; this tool returns the redirect target).",
     inputSchema: {
@@ -919,9 +919,9 @@ server.registerTool(
     title: "Render Track Waveform (SVG)",
     annotations: { title: "Render Track Waveform (SVG)", readOnlyHint: true, openWorldHint: true },
     description:
-      "SVG waveform render of the track's 30-second iTunes preview. 120 RMS-bucketed " +
+      "SVG waveform render of the track's 30-second commercial preview. 120 RMS-bucketed " +
       "bars themable via CSS currentColor. Returns the SVG markup as text — embed " +
-      "directly in HTML or save to a .svg file. Catalog tracks with numeric iTunes ids " +
+      "directly in HTML or save to a .svg file. Catalog tracks with numeric catalog ids " +
       "only; synthetic ids (mb:) return 404.",
     inputSchema: {
       track_id: z.string().min(1).max(80).describe("Numeric catalog itunes_track_id"),
