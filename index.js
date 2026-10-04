@@ -186,11 +186,11 @@ server.registerTool(
       "AcousticBrainz fallback; GET /cache/stats returns the live count as " +
       "tracks_analyzed (tracks_indexed is the larger catalogue, much of which is " +
       "not yet analysed). " +
-      "VALUES are FreqBlog's own (NOT on Spotify's scale): energy, danceability and valence are " +
-      "on our own raw scale, so derive thresholds from our values rather than copying " +
-      "Spotify-tuned ones; acousticness and danceability are the AcousticBrainz classifier " +
-      "where available, else a model that listens to the preview (rolling out since " +
-      "2026-09-27); instrumentalness, speechiness and liveness are currently null for " +
+      "VALUES are FreqBlog's own (NOT on Spotify's scale): energy and valence are on our " +
+      "own raw scale, so derive thresholds from our values rather than copying " +
+      "Spotify-tuned ones; danceability and acousticness are the AcousticBrainz classifier " +
+      "where available, else a model that listens to the preview, built on PANNs embeddings " +
+      "(Kong et al. 2020, CC BY 4.0); instrumentalness, speechiness and liveness are currently null for " +
       "catalogue tracks. " +
       "Drop-in replacement for Spotify audio-features.",
     inputSchema: {
