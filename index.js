@@ -546,8 +546,9 @@ server.registerTool(
     annotations: { title: "Find Similar Tracks", readOnlyHint: true, openWorldHint: true },
     description:
       "Recommendation engine. Given a seed track id, return the most acoustically " +
-      "similar tracks in the catalog ranked by cosine similarity over an 18-feature " +
-      "audio embedding. Use exclude_same_artist=true for cross-artist discovery feeds. " +
+      "similar tracks in the catalog, ranked on a blend of a PANNs audio embedding (how the " +
+      "recording sounds; 80%) and cosine similarity over an 18-feature audio embedding (20%). " +
+      "Use exclude_same_artist=true for cross-artist discovery feeds. " +
       "Results are one row per recording (the same track released under several " +
       "storefront ids is collapsed) and are kept in a mixable genre lane by default — " +
       "set cross_genre='allow' for pure acoustic ranking, or 'strict' for the seed's " +
@@ -555,9 +556,10 @@ server.registerTool(
       "'compatible' (different but mixable family), 'cross' (unrelated), or 'unknown' (either " +
       "side has no mapped genre, so no adjustment was applied). HERE it is the value the " +
       "ranking itself uses, so it explains the order and marks where the cross-genre tail " +
-      "begins; filter on it to keep only in-lane picks. `score` is the raw cosine, so genre " +
+      "begins; filter on it to keep only in-lane picks. `score` is that blended similarity " +
+      "(top results typically ~0.7-0.97; tracks without an embedding score lower) and genre " +
       "affects ORDER: the list is not strictly score-descending and should not be re-sorted " +
-      "by score.",
+      "by score. PANNs (Kong et al., 2020) is used under CC BY 4.0.",
     inputSchema: {
       track_id: z.string().min(1).max(80).describe("Seed track id (catalog itunes_track_id)"),
       limit: z.number().int().min(1).max(50).default(10).describe("Max results (default 10)"),

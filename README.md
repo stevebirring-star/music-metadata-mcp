@@ -4,7 +4,7 @@ MCP server for the [FreqBlog Music API](https://freqblog.com/?utm_source=github&
 
 Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio features, build harmonic playlists, fetch lyrics, render waveforms, and export DJ-ready files. For reliable, full-catalog results, identify tracks by **name** (+ optional artist) or **ISRC** — a track name alone works, no Spotify account or ISRC needed. MusicBrainz IDs are also accepted. A raw **Spotify track ID** works too — resolved per request by reading the track's title from Spotify's public embed page and matching it against our catalogue (we store no Spotify IDs; a resolution is remembered in memory for at most 24h) — but a title several artists share is ambiguous and misses rather than guessing, so it is not a universal Spotify-ID reverse lookup: prefer name or ISRC.
 
-## Tools (v2.17.5 — 23 total)
+## Tools (v2.17.6 — 23 total)
 
 ### Core lookup
 | Tool | Description |
@@ -20,7 +20,7 @@ Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio
 ### Recommendations & DJ tools
 | Tool | Description |
 |------|-------------|
-| `find_similar_tracks` | Cosine-similarity recommendation engine over the entire catalog |
+| `find_similar_tracks` | Recommendation engine over the entire catalog — PANNs audio-embedding similarity blended with the 18-feature cosine |
 | `get_recommendations` | Spotify `/v1/recommendations` replacement — blend up to 5 seed tracks (or seed by `track`+`artist` name), genre-aware ranking. Tune with `min`/`max` (hard filters) and `target` (preference) over tempo, energy, valence, danceability, acousticness, loudness, duration_ms (`popularity`, `liveness`, `speechiness` and `instrumentalness` are retired and return 400). Costs 2 units |
 | `get_related_artists` | Spotify related-artists replacement — derived artist graph from audio-feature similarity. Costs 2 units |
 | `build_radio_playlist` | Harmonic + BPM-continuity DJ playlist from a seed track |
