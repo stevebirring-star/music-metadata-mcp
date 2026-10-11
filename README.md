@@ -43,9 +43,9 @@ Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio
 |------|-------------|
 | `tag_track` | Compact, honestly-labelled tag list (energy/danceability/valence/acousticness + mood + genre) — a tag-shaped projection of `lookup_track`, every tag carrying its own confidence + provenance. Costs 1 unit |
 | `track_embedding` | 18-dim numeric vector for ML / similarity / clustering |
-| `track_artwork_url` | Resolved cover-art image URL (catalogue artwork / Cover Art Archive) |
-| `track_lyrics` | Synced + plain lyrics via the open LRClib dataset |
-| `track_waveform_svg` | SVG waveform render of the track's 30-second preview |
+| `track_artwork_url` | Resolved cover-art image URL (catalogue artwork / Cover Art Archive). Costs 1 unit |
+| `track_lyrics` | Synced + plain lyrics via the open LRClib dataset. Costs 1 unit |
+| `track_waveform_svg` | SVG waveform render of the track's 30-second preview. Costs 1 unit |
 
 ## Quick Start
 

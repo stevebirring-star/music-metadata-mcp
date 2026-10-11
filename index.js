@@ -881,7 +881,8 @@ server.registerTool(
     description:
       "Get a cover-art image URL for a track. Resolves catalogue artwork for numeric " +
       "catalog ids, or Cover Art Archive via MBID for the rest. Returns the final " +
-      "image URL string (the API endpoint 302-redirects; this tool returns the redirect target).",
+      "image URL string (the API endpoint 302-redirects; this tool returns the redirect target). " +
+      "Costs 1 quota unit; a track with no cover art (404) is free.",
     inputSchema: {
       track_id: z.string().min(1).max(80).describe("Catalog itunes_track_id"),
       size: z.number().int().min(100).max(1200).default(600).describe("Desired image size in pixels"),
@@ -903,7 +904,7 @@ server.registerTool(
     description:
       "Synced + plain lyrics for a catalog track via the open LRClib dataset. Synced lyrics " +
       "come back parsed as [{ms, text}] — no LRC parsing needed. Returns instrumental=true " +
-      "for tracks LRClib has flagged as instrumental.",
+      "for tracks LRClib has flagged as instrumental. Costs 1 quota unit.",
     inputSchema: {
       track_id: z.string().min(1).max(80).describe("Catalog itunes_track_id"),
     },
@@ -924,7 +925,7 @@ server.registerTool(
       "SVG waveform render of the track's 30-second commercial preview. 120 RMS-bucketed " +
       "bars themable via CSS currentColor. Returns the SVG markup as text — embed " +
       "directly in HTML or save to a .svg file. Catalog tracks with numeric catalog ids " +
-      "only; synthetic ids (mb:) return 404.",
+      "only; synthetic ids (mb:) return 404. Costs 1 quota unit.",
     inputSchema: {
       track_id: z.string().min(1).max(80).describe("Numeric catalog itunes_track_id"),
       w: z.number().int().min(120).max(2400).default(600).describe("Width in px"),
