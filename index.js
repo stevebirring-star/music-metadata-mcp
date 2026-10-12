@@ -960,8 +960,8 @@ server.registerTool(
       "MusicBrainz recording ID (mbid), a Spotify track ID, or a catalog track_id " +
       "(itunes_track_id from any prior response); sending several is fine — they resolve by " +
       "precedence (track > isrc > track_id > mbid > spotify_id). The broad, reliable coverage is the MEASURED tags " +
-      "from our Essentia analysis over the analysed catalogue (800k+ tracks, plus on-demand by " +
-      "name); MBID/ISRC additionally reach 7.5M+ AcousticBrainz recordings WHEN you supply that " +
+      "from our own analysis (librosa signal analysis + a PANNs-based model) over the analysed " +
+      "catalogue (plus on-demand by name); MBID/ISRC additionally reach 7.5M+ AcousticBrainz recordings WHEN you supply that " +
       "identifier. For the full numeric feature set use lookup_track; for nearest tracks use " +
       "find_similar_tracks. Returns { track, count, tags, disclaimer }.",
     inputSchema: {
