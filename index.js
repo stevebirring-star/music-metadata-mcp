@@ -190,7 +190,8 @@ server.registerTool(
       "own raw scale, so derive thresholds from our values rather than copying " +
       "Spotify-tuned ones; danceability and acousticness are the AcousticBrainz classifier " +
       "where available, else a model that listens to the preview, built on PANNs embeddings " +
-      "(Kong et al. 2020, CC BY 4.0); instrumentalness, speechiness and liveness are currently null for " +
+      "(Kong et al. 2020, CC BY 4.0); instrumentalness is a vocal-detection model's score for the " +
+      "30-second preview (not the whole track); speechiness and liveness are currently null for " +
       "catalogue tracks. " +
       "Drop-in replacement for Spotify audio-features.",
     inputSchema: {
@@ -946,8 +947,8 @@ server.registerTool(
     annotations: { title: "Tag Track", readOnlyHint: true, openWorldHint: true },
     description:
       "Get a compact, HONESTLY-LABELLED tag list for a track — energy / danceability / valence / " +
-      "acousticness, plus a mood tag and a broad genre tag (instrumentalness is currently null, " +
-      "so it is not tagged). It is a tag-shaped " +
+      "acousticness / instrumentalness (instrumental vs vocal, judged on the 30-second preview), " +
+      "plus a mood tag and a broad genre tag. It is a tag-shaped " +
       "projection of the same open-data analysis lookup_track returns (no audio upload, no extra " +
       "compute), so it costs the same 1 quota unit and is charged only on a served result. The " +
       "differentiator vs opaque taggers (e.g. Cyanite) is that EVERY tag carries its own " +
