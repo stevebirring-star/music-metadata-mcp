@@ -952,9 +952,9 @@ server.registerTool(
       "projection of the same open-data analysis lookup_track returns (no audio upload, no extra " +
       "compute), so it costs the same 1 quota unit and is charged only on a served result. The " +
       "differentiator vs opaque taggers (e.g. Cyanite) is that EVERY tag carries its own " +
-      "`confidence` (measured = our Essentia analysis | derived = MIREX mood from valence+energy | " +
+      "`confidence` (measured = a numeric audio feature, source in `provenance` | derived = MIREX mood from valence+energy | " +
       "model-estimated = AcousticBrainz mood SVM probability, raw prob in `value` | catalog-genre = " +
-      "broad catalogue tag) and `provenance` (essentia | valence+energy | acousticbrainz | catalog). " +
+      "broad catalogue tag) and `provenance` (essentia | panns | valence+energy | acousticbrainz | catalog). " +
       "`value` is the [0,1] score for numeric tags and null for label-only tags (mood category, " +
       "genre). Provide AT LEAST ONE of: a track name (optionally with artist), an ISRC, a " +
       "MusicBrainz recording ID (mbid), a Spotify track ID, or a catalog track_id " +
