@@ -15,7 +15,7 @@ Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio
 | `find_tracks_by_bpm` | Find tracks within ±tolerance of a target BPM |
 | `find_tracks_by_key` | Find tracks by key — Camelot (8A), Open Key (1m), or name (A-Minor) |
 
-> **About the values (2026-09-27):** audio features are FreqBlog's own analysis and are **not** on Spotify's scale. `energy` (since 2026-10-12) is a model of how energetic the preview sounds and `valence` is our own raw scale, both on our own 0–1 scales — derive thresholds from our values rather than reusing Spotify-tuned ones. `acousticness` and `danceability` come from the AcousticBrainz classifier where available, else a model that listens to the preview (built on PANNs embeddings, CC BY 4.0; rolling out since 2026-09-27). `instrumentalness` (since 2026-10-12) is a vocal-detection model's score for the 30-second preview, not the whole track. `speechiness` and `liveness` are currently `null` for catalogue tracks.
+> **About the values (2026-09-27):** audio features are FreqBlog's own analysis and are **not** on Spotify's scale. `energy` (since 2026-10-12) and `valence` (since 2026-10-13) are models of how energetic / positive the preview sounds, both on our own 0–1 scales — derive thresholds from our values rather than reusing Spotify-tuned ones. `acousticness` and `danceability` come from the AcousticBrainz classifier where available, else a model that listens to the preview (built on PANNs embeddings, CC BY 4.0; rolling out since 2026-09-27). `instrumentalness` (since 2026-10-12) is a vocal-detection model's score for the 30-second preview, not the whole track. `speechiness` and `liveness` are currently `null` for catalogue tracks.
 
 ### Recommendations & DJ tools
 | Tool | Description |

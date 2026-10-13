@@ -186,8 +186,8 @@ server.registerTool(
       "AcousticBrainz fallback; GET /cache/stats returns the live count as " +
       "tracks_analyzed (tracks_indexed is the larger catalogue, much of which is " +
       "not yet analysed). " +
-      "VALUES are FreqBlog's own (NOT on Spotify's scale): energy is a model of how energetic " +
-      "the preview sounds and valence is our own raw value, both on our own scales, so derive thresholds from our values rather than copying " +
+      "VALUES are FreqBlog's own (NOT on Spotify's scale): energy and valence are models of how " +
+      "the preview sounds (energetic / positive), both on our own scales, so derive thresholds from our values rather than copying " +
       "Spotify-tuned ones; danceability and acousticness are the AcousticBrainz classifier " +
       "where available, else a model that listens to the preview, built on PANNs embeddings " +
       "(Kong et al. 2020, CC BY 4.0); instrumentalness is a vocal-detection model's score for the " +
