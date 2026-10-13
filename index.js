@@ -3,7 +3,7 @@
  * music-metadata-mcp
  * MCP server for the Music Metadata API (https://freqblog.com/)
  *
- * Exposes BPM, key, mood, genre and 30+ audio features through 23 MCP tools.
+ * Exposes BPM, key, mood, genre and 20+ more fields per track through 23 MCP tools.
  * Drop-in replacement for Spotify audio-features in AI workflows.
  *
  * Usage:
@@ -171,7 +171,7 @@ server.registerTool(
     annotations: { title: "Look Up Track Audio Features", readOnlyHint: true, openWorldHint: true },
     description:
       "Look up audio features for a track — BPM, musical key, mood, genre, danceability, " +
-      "energy, acousticness and 30+ more — including `chart_peak`, the best " +
+      "energy, acousticness and more (25+ fields per track) — including `chart_peak`, the best " +
       "chart position we hold (1-100, 100 = a number-one; null = none held, meaning UNKNOWN " +
       "rather than unpopular, and NOT audience size). Provide AT LEAST ONE of: a track " +
       "name (optionally with artist), an ISRC, a MusicBrainz recording ID (mbid), or a Spotify " +
