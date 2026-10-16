@@ -192,7 +192,7 @@ server.registerTool(
       "where available, else a model that listens to the preview, built on PANNs embeddings " +
       "(Kong et al. 2020, CC BY 4.0); instrumentalness is a vocal-detection model's score for the " +
       "30-second preview (not the whole track); speechiness and liveness are currently null for " +
-      "catalogue tracks. " +
+      "catalogue tracks; time_signature is ASSUMED 4 (4/4) on every track, not measured. " +
       "Drop-in replacement for Spotify audio-features.",
     inputSchema: {
       track: z
