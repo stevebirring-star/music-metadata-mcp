@@ -153,7 +153,7 @@ const server = new McpServer(
       "energy arc). Chain build_setlist -> export_playlist to drop straight into Rekordbox/Serato.\n\n" +
       "FILTER + BROWSE: find_tracks_by_bpm, find_tracks_by_key, find_artist_tracks, " +
       "list_genres, tracks_in_genre.\n\n" +
-      "EXTRAS: track_lyrics (synced + plain), track_artwork_url (cover art), " +
+      "EXTRAS: track_lyrics (availability + LRClib link, no text), track_artwork_url (cover art), " +
       "track_waveform_svg (waveform render), track_embedding (numeric vector for ML), " +
       "tag_track (compact, honestly-labelled tag list — a tag-shaped projection of lookup_track, " +
       "each tag carrying its confidence + provenance).\n\n" +
@@ -900,12 +900,13 @@ server.registerTool(
 server.registerTool(
   "track_lyrics",
   {
-    title: "Get Track Lyrics",
-    annotations: { title: "Get Track Lyrics", readOnlyHint: true, openWorldHint: true },
+    title: "Check Track Lyrics Availability",
+    annotations: { title: "Check Track Lyrics Availability", readOnlyHint: true, openWorldHint: true },
     description:
-      "Synced + plain lyrics for a catalog track via the open LRClib dataset. Synced lyrics " +
-      "come back parsed as [{ms, text}] — no LRC parsing needed. Returns instrumental=true " +
-      "for tracks LRClib has flagged as instrumental. Costs 1 quota unit.",
+      "Whether the open LRClib dataset has lyrics for a catalog track (has_plain_lyrics, " +
+      "has_synced_lyrics, instrumental) plus a lyrics_url to fetch them from LRClib directly. " +
+      "Lyric TEXT is not returned (lyrics are publisher-owned; plain_lyrics is always null). " +
+      "Free — not counted against your quota.",
     inputSchema: {
       track_id: z.string().min(1).max(80).describe("Catalog itunes_track_id"),
     },
