@@ -350,6 +350,9 @@ server.registerTool(
       "them, so split a long list into calls of <=50 and resubmit any skipped rows (up to 200 accepted per call). " +
       "Billed per item that returns features or queues an on-demand ingest; an ISRC/name with no match anywhere is free. "
       + "A track you queue and then collect costs one unit, not two — the call that collects it is free. " +
+      "For a found:false item, backfill_status 'queued', 'processing' or 'deferred' means retry later; " +
+      "'unavailable' is terminal (with terminal, reason and retry_after_days — treat it as a miss until then); " +
+      "null means no match anywhere. " +
       "Returns found/not_found/skipped counts alongside individual results (each echoes back its isrc).",
     inputSchema: {
       tracks: z
