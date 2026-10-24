@@ -63,7 +63,7 @@ async function apiGet(path) {
   });
   if (!res.ok) {
     let detail = `HTTP ${res.status}`;
-    try { detail = (await res.json()).detail || detail; } catch (_) {}
+    try { const b = await res.json(); detail = (b.detail || detail) + (b.hint ? ` Hint: ${b.hint}` : ""); } catch (_) {}
     throw new Error(detail);
   }
   return res.json();
@@ -77,7 +77,7 @@ async function apiPost(path, body) {
   });
   if (!res.ok) {
     let detail = `HTTP ${res.status}`;
-    try { detail = (await res.json()).detail || detail; } catch (_) {}
+    try { const b = await res.json(); detail = (b.detail || detail) + (b.hint ? ` Hint: ${b.hint}` : ""); } catch (_) {}
     throw new Error(detail);
   }
   return res.json();
@@ -90,7 +90,7 @@ async function apiGetText(path) {
   });
   if (!res.ok) {
     let detail = `HTTP ${res.status}`;
-    try { detail = (await res.json()).detail || detail; } catch (_) {}
+    try { const b = await res.json(); detail = (b.detail || detail) + (b.hint ? ` Hint: ${b.hint}` : ""); } catch (_) {}
     throw new Error(detail);
   }
   return res.text();
@@ -108,7 +108,7 @@ async function apiGetRedirect(path) {
   }
   if (!res.ok) {
     let detail = `HTTP ${res.status}`;
-    try { detail = (await res.json()).detail || detail; } catch (_) {}
+    try { const b = await res.json(); detail = (b.detail || detail) + (b.hint ? ` Hint: ${b.hint}` : ""); } catch (_) {}
     throw new Error(detail);
   }
   // Endpoint didn't redirect — body should still be useful.
