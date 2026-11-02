@@ -182,10 +182,9 @@ server.registerTool(
       "title from Spotify's public embed page and match it against our catalogue (no Spotify " +
       "IDs are stored); a title several artists share is ambiguous and misses rather than " +
       "guessing — not a universal Spotify-ID reverse lookup. " +
-      "Covers 800k+ fully analysed tracks (instant) plus 7.5M+ via MusicBrainz + " +
+      "Covers about 2M fully analysed tracks (instant) plus 7.5M+ via MusicBrainz + " +
       "AcousticBrainz fallback; GET /cache/stats returns the live count as " +
-      "tracks_analyzed (tracks_indexed is the larger catalogue, much of which is " +
-      "not yet analysed). " +
+      "tracks_analyzed. " +
       "VALUES are FreqBlog's own (NOT on Spotify's scale): energy and valence are models of how " +
       "the preview sounds (energetic / positive), both on our own scales, so derive thresholds from our values rather than copying " +
       "Spotify-tuned ones; danceability and acousticness are the AcousticBrainz classifier " +
