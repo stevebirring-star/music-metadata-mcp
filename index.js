@@ -699,7 +699,7 @@ server.registerTool(
       track_id: z.string().min(1).max(80).optional().describe("Seed track id (catalog itunes_track_id). Omit when using seed_tracks / seed_isrcs"),
       seed_tracks: z.array(z.string().min(1).max(80)).min(1).max(10).optional().describe("Several seeds: catalog itunes_track_ids (up to 10 together with seed_isrcs)"),
       seed_isrcs: z.array(z.string().min(12).max(15)).min(1).max(10).optional().describe("Several seeds by ISRC (up to 10 together with seed_tracks)"),
-      blend: z.enum(["all", "any"]).default("all").describe("With several seeds: 'all' = like the whole set (default), 'any' = like any one seed, interleaved"),
+      blend: z.enum(["all", "any"]).default("all").describe("With several seeds: 'all' (default) = sounds like the set as a whole, best when the seeds share a style; 'any' = every seed gets its own neighbours, interleaved — use it when the seeds are from different genres"),
       limit: z.number().int().min(1).max(50).default(10).describe("Max results (default 10)"),
       exclude_same_artist: z.boolean().default(false).describe("Drop tracks by the seed's artist"),
       cross_genre: z.enum(["auto", "allow", "strict"]).default("auto")
