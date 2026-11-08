@@ -174,7 +174,9 @@ server.registerTool(
       "Look up audio features for a track — BPM, musical key, mood, genre, danceability, " +
       "energy, acousticness and more (25+ fields per track) — including `chart_peak`, the best " +
       "chart position we hold (1-100, 100 = a number-one; null = none held, meaning UNKNOWN " +
-      "rather than unpopular, and NOT audience size). Provide AT LEAST ONE of: a track " +
+      "rather than unpopular, and NOT audience size) — and `preview_loudness.integrated_lufs`, the " +
+      "BS.1770 integrated loudness of the 30-second preview (often the chorus, so a little louder " +
+      "than the full track). Provide AT LEAST ONE of: a track " +
       "name (optionally with artist), an ISRC, a MusicBrainz recording ID (mbid), or a Spotify " +
       "track ID — if you know several, send them all rather than choosing; they resolve by " +
       "precedence (track > isrc > mbid > spotify_id) and the rest are ignored. For reliable coverage, identify by track name (+artist) or ISRC: a name miss " +
