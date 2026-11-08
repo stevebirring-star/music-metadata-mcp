@@ -141,7 +141,7 @@ const server = new McpServer(
     instructions:
       "Music metadata, recognition, recommendation and DJ-tooling endpoints for the FreqBlog API.\n\n" +
       "PRIMARY: lookup_track (audio features by name, ISRC, MBID, or Spotify ID), search_tracks (full-text search), " +
-      "find_similar_tracks (acoustic recommendation engine), get_recommendations (Spotify " +
+      "find_similar_tracks (acoustic recommendation engine; one seed or up to 10), get_recommendations (Spotify " +
       "/recommendations replacement — genre-aware blend of up to 5 seed tracks), get_related_artists " +
       "(Spotify related-artists replacement — derived artist graph).\n\n" +
       "DJ: build_radio_playlist (harmonic + BPM-continuity walk), export_playlist " +
@@ -151,7 +151,8 @@ const server = new McpServer(
       "score_transition (how well track A mixes into track B, 0-100), suggest_next_track " +
       "(ranked next-track picks for a seed), build_setlist (order a crate into a beat-matched " +
       "energy arc). Chain build_setlist -> export_playlist to drop straight into Rekordbox/Serato.\n\n" +
-      "FILTER + BROWSE: find_tracks_by_bpm, find_tracks_by_key, find_artist_tracks, " +
+      "FILTER + BROWSE: discover_tracks (tempo + key + genre + year + audio-feature filters in one " +
+      "search, no seed needed), find_tracks_by_bpm, find_tracks_by_key, find_artist_tracks, " +
       "list_genres, tracks_in_genre.\n\n" +
       "EXTRAS: track_lyrics (availability + LRClib link, no text), track_artwork_url (cover art), " +
       "track_waveform_svg (waveform render), track_embedding (numeric vector for ML), " +
@@ -542,6 +543,71 @@ server.registerTool(
   }
 );
 
+// ── Tool: discover_tracks (seedless filtered search, 2026-11-08) ─────────────
+server.registerTool(
+  "discover_tracks",
+  {
+    title: "Discover Tracks by Criteria",
+    annotations: { title: "Discover Tracks by Criteria", readOnlyHint: true, openWorldHint: true },
+    description:
+      "Find catalog tracks by criteria with NO seed track: tempo, key, genre, release year, chart " +
+      "placement and audio-feature ranges in one call — e.g. house at 122-126 BPM in 8A or its " +
+      "neighbours with energy above 0.7: min={tempo:122, energy:0.7}, max={tempo:126}, key='8A', " +
+      "harmonic=true, genre='house'. At least one narrowing filter is required (a tempo/feature " +
+      "bound, key, mode, genre, year or chart). tempo_match='half_double' also matches double/half " +
+      "the tempo range (an 87 BPM track for a 174 BPM set). Returns `results` (one per recording, " +
+      "each with bpm, camelot, energy, danceability, valence, acousticness, loudness_db + catalog " +
+      "metadata), `total_matches` (exact up to 1,000), `next_offset`, and `filters` — what applied " +
+      "and how many tracks each filter removed (`dropped_by`); if the list is short, loosen the " +
+      "largest. energy/danceability/valence are on FreqBlog's own scales. Results reach a depth of " +
+      "500 per query (offset + limit <= 500). Pass a result's itunes_track_id to lookup_track, " +
+      "suggest_next_track or build_setlist. Costs 1 unit.",
+    inputSchema: {
+      min: z.record(z.string(), z.number()).optional().describe(`HARD lower bounds, e.g. {tempo:122, energy:0.7}. Attributes: ${TUNABLE_ATTRIBUTES.join(", ")}`),
+      max: z.record(z.string(), z.number()).optional().describe("HARD upper bounds, e.g. {tempo:126}. Same attributes as `min`"),
+      target: z.record(z.string(), z.number()).optional().describe("PREFERRED values, e.g. {energy:0.8}: nearest first, nothing removed. Same attributes as `min`"),
+      tempo_match: z.enum(["exact", "half_double"]).default("exact").describe("'half_double' also matches double/half the min/max tempo range"),
+      key: z.string().min(1).max(300).optional().describe("Comma list of keys: Camelot ('8A'), Open Key ('1m') or names ('A minor')"),
+      harmonic: z.boolean().default(false).describe("Widen each key to its harmonically compatible keys (same, relative, +/-1 on the Camelot wheel)"),
+      mode: z.enum(["major", "minor"]).optional().describe("Only major or only minor keys"),
+      genre: z.string().min(1).max(500).optional().describe("Comma list of catalog genre names (see list_genres); an unknown name is rejected with close matches"),
+      include_subgenres: z.boolean().default(false).describe("Also match every subgenre of a top-level genre"),
+      min_year: z.number().int().min(1000).max(2100).optional().describe("Earliest release year"),
+      max_year: z.number().int().min(1000).max(2100).optional().describe("Latest release year"),
+      explicit: z.boolean().optional().describe("true = explicit only, false = non-explicit only; omit for either"),
+      charted: z.boolean().optional().describe("true = only tracks with a known chart placement (about 4% of tracks)"),
+      min_chart_peak: z.number().int().min(1).max(100).optional().describe("Best chart position required, as chart_peak (100 = a number one)"),
+      sort: z.enum(["chart", "newest", "oldest", "tempo", "-tempo", "energy", "-energy", "target"]).optional().describe("Order: chart (default: charted first, then newest), newest, oldest, tempo, -tempo, energy, -energy, target (default when `target` is given)"),
+      limit: z.number().int().min(1).max(50).default(20).describe("Tracks per page (default 20)"),
+      offset: z.number().int().min(0).max(499).default(0).describe("Skip this many tracks (offset + limit <= 500)"),
+    },
+  },
+  async (a) => {
+    const { min, max, target, limit = 20, offset = 0 } = a;
+    if (offset + limit > 500) {
+      return text('{"error":"offset + limit may not exceed 500 — narrow the filters to reach further."}');
+    }
+    const params = new URLSearchParams({ limit: String(limit), offset: String(offset),
+      tempo_match: a.tempo_match || "exact", harmonic: String(!!a.harmonic),
+      include_subgenres: String(!!a.include_subgenres) });
+    for (const k of ["key", "mode", "genre", "min_year", "max_year", "explicit", "charted", "min_chart_peak", "sort"]) {
+      if (a[k] !== undefined && a[k] !== null) params.set(k, String(a[k]));
+    }
+    for (const [prefix, obj] of [["min", min], ["max", max], ["target", target]]) {
+      for (const [attr, value] of Object.entries(obj || {})) {
+        if (!TUNABLE_ATTRIBUTES.includes(attr)) {
+          return text(JSON.stringify({
+            error: `${prefix}.${attr} is not a filterable attribute — it would be ignored.`,
+            supported: TUNABLE_ATTRIBUTES,
+          }));
+        }
+        params.set(`${prefix}_${attr}`, String(value));
+      }
+    }
+    return text(await apiGet(`/discover?${params}`));
+  }
+);
+
 // ── Tool: find_similar_tracks (Slice 2) ───────────────────────────────────────
 
 server.registerTool(
@@ -550,7 +616,7 @@ server.registerTool(
     title: "Find Similar Tracks",
     annotations: { title: "Find Similar Tracks", readOnlyHint: true, openWorldHint: true },
     description:
-      "Recommendation engine. Given a seed track id, return the most acoustically " +
+      "Recommendation engine. Given a seed track id (or up to 10 seeds), return the most acoustically " +
       "similar tracks in the catalog, ranked on a blend of a PANNs audio embedding (how the " +
       "recording sounds; 80%) and cosine similarity over an 18-feature audio embedding (20%). " +
       "Use exclude_same_artist=true for cross-artist discovery feeds. " +
@@ -564,20 +630,44 @@ server.registerTool(
       "begins; filter on it to keep only in-lane picks. `score` is that blended similarity " +
       "(top results typically ~0.7-0.97; tracks without an embedding score lower) and genre " +
       "affects ORDER: the list is not strictly score-descending and should not be re-sorted " +
-      "by score. PANNs (Kong et al., 2020) is used under CC BY 4.0.",
+      "by score. SEVERAL SEEDS: pass seed_tracks (catalog ids) and/or seed_isrcs, up to 10 in " +
+      "total, instead of track_id. blend='all' (default) ranks by mean similarity to every seed — " +
+      "tracks that sound like the set; blend='any' ranks by the closest seed and interleaves so " +
+      "every seed is represented. Each result then carries `matched_seed` (the seed it is closest " +
+      "to) and the response lists `seeds` used and `seeds_missing`. Costs 1 unit however many " +
+      "seeds. PANNs (Kong et al., 2020) is used under CC BY 4.0.",
     inputSchema: {
-      track_id: z.string().min(1).max(80).describe("Seed track id (catalog itunes_track_id)"),
+      track_id: z.string().min(1).max(80).optional().describe("Seed track id (catalog itunes_track_id). Omit when using seed_tracks / seed_isrcs"),
+      seed_tracks: z.array(z.string().min(1).max(80)).min(1).max(10).optional().describe("Several seeds: catalog itunes_track_ids (up to 10 together with seed_isrcs)"),
+      seed_isrcs: z.array(z.string().min(12).max(15)).min(1).max(10).optional().describe("Several seeds by ISRC (up to 10 together with seed_tracks)"),
+      blend: z.enum(["all", "any"]).default("all").describe("With several seeds: 'all' = like the whole set (default), 'any' = like any one seed, interleaved"),
       limit: z.number().int().min(1).max(50).default(10).describe("Max results (default 10)"),
       exclude_same_artist: z.boolean().default(false).describe("Drop tracks by the seed's artist"),
       cross_genre: z.enum(["auto", "allow", "strict"]).default("auto")
         .describe("Genre handling: auto (default, mixable lane), allow (genre-blind), strict (same genre family only)"),
     },
   },
-  async ({ track_id, limit = 10, exclude_same_artist = false, cross_genre = "auto" }) => {
+  async ({ track_id, seed_tracks, seed_isrcs, blend = "all", limit = 10, exclude_same_artist = false, cross_genre = "auto" }) => {
+    const multi = (seed_tracks && seed_tracks.length) || (seed_isrcs && seed_isrcs.length);
+    if (multi && track_id) {
+      return text('{"error":"Pass either track_id (one seed) or seed_tracks / seed_isrcs (several), not both."}');
+    }
+    if (!multi && !track_id) {
+      return text('{"error":"Provide track_id, or seed_tracks / seed_isrcs for several seeds."}');
+    }
+    if ((seed_tracks || []).length + (seed_isrcs || []).length > 10) {
+      return text('{"error":"At most 10 seeds in total across seed_tracks and seed_isrcs."}');
+    }
     const params = new URLSearchParams({
-      track_id, limit: String(limit), exclude_same_artist: String(exclude_same_artist),
-      cross_genre,
+      limit: String(limit), exclude_same_artist: String(exclude_same_artist), cross_genre,
     });
+    if (multi) {
+      if (seed_tracks && seed_tracks.length) params.set("seed_tracks", seed_tracks.join(","));
+      if (seed_isrcs && seed_isrcs.length) params.set("seed_isrcs", seed_isrcs.join(","));
+      params.set("blend", blend);
+    } else {
+      params.set("track_id", track_id);
+    }
     return text(await apiGet(`/similar?${params}`));
   }
 );
@@ -1032,4 +1122,4 @@ server.registerTool(
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-process.stderr.write(`[music-metadata-mcp] Server running on stdio (v${PKG_VERSION} — 23 tools)\n`);
+process.stderr.write(`[music-metadata-mcp] Server running on stdio (v${PKG_VERSION} — 24 tools)\n`);

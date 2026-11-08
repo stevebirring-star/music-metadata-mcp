@@ -14,13 +14,14 @@ Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio
 | `bulk_lookup` | Look up up to 50 tracks (by name or ISRC) in one request |
 | `find_tracks_by_bpm` | Find tracks within ±tolerance of a target BPM |
 | `find_tracks_by_key` | Find tracks by key — Camelot (8A), Open Key (1m), or name (A-Minor) |
+| `discover_tracks` | Find tracks by criteria, no seed needed: tempo (incl. half/double time), key (+ harmonic neighbours, mode), genre, release year, chart placement, explicit, and `min`/`max`/`target` over the audio features. Results reach 500 deep per query. Costs 1 unit |
 
 > **About the values (2026-09-27):** audio features are FreqBlog's own analysis and are **not** on Spotify's scale. `energy` (since 2026-10-12) and `valence` (since 2026-10-13) are models of how energetic / positive the preview sounds, both on our own 0–1 scales — derive thresholds from our values rather than reusing Spotify-tuned ones. `acousticness` and `danceability` come from the AcousticBrainz classifier where available, else a model that listens to the preview (built on PANNs embeddings, CC BY 4.0; rolling out since 2026-09-27). `instrumentalness` (since 2026-10-12) is a vocal-detection model's score for the 30-second preview, not the whole track. `speechiness` and `liveness` are currently `null` for catalogue tracks.
 
 ### Recommendations & DJ tools
 | Tool | Description |
 |------|-------------|
-| `find_similar_tracks` | Recommendation engine over the entire catalog — PANNs audio-embedding similarity blended with the 18-feature cosine |
+| `find_similar_tracks` | Recommendation engine over the entire catalog — PANNs audio-embedding similarity blended with the 18-feature cosine. One seed, or up to 10 (`seed_tracks` / `seed_isrcs`) with `blend` = `all` (like the set) or `any` (like any one seed) |
 | `get_recommendations` | Spotify `/v1/recommendations` replacement — blend up to 5 seed tracks (or seed by `track`+`artist` name), genre-aware ranking. Tune with `min`/`max` (hard filters) and `target` (preference) over tempo, energy, valence, danceability, acousticness, loudness, duration_ms (`popularity`, `liveness`, `speechiness` and `instrumentalness` are retired and return 400). Costs 2 units |
 | `get_related_artists` | Spotify related-artists replacement — derived artist graph from audio-feature similarity. Costs 2 units |
 | `build_radio_playlist` | Harmonic + BPM-continuity DJ playlist from a seed track |
