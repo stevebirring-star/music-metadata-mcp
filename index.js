@@ -141,7 +141,7 @@ const server = new McpServer(
     instructions:
       "Music metadata, recognition, recommendation and DJ-tooling endpoints for the FreqBlog API.\n\n" +
       "PRIMARY: lookup_track (audio features by name, ISRC, MBID, or Spotify ID), search_tracks (full-text search), " +
-      "find_similar_tracks (acoustic recommendation engine; one seed or up to 10), get_recommendations (Spotify " +
+      "find_similar_tracks (acoustic recommendation engine; one seed or up to 10), search_by_description (plain-language search: 'melancholic piano, slow'), get_recommendations (Spotify " +
       "/recommendations replacement — genre-aware blend of up to 5 seed tracks), get_related_artists " +
       "(Spotify related-artists replacement — derived artist graph).\n\n" +
       "DJ: build_radio_playlist (harmonic + BPM-continuity walk), export_playlist " +
@@ -605,6 +605,58 @@ server.registerTool(
       }
     }
     return text(await apiGet(`/discover?${params}`));
+  }
+);
+
+// ── Tool: search_by_description (2026-11-08) ───────────────────────────────────
+
+server.registerTool(
+  "search_by_description",
+  {
+    title: "Search Tracks by Description",
+    annotations: { title: "Search Tracks by Description", readOnlyHint: true, openWorldHint: true },
+    description:
+      "Find catalog tracks from a plain-language description of how they sound — e.g. " +
+      "'melancholic piano, slow', 'dark ambient strings', 'upbeat acoustic guitar, fast'. " +
+      "Understands instruments/voice (piano, guitar, acoustic guitar, violin, cello, strings, " +
+      "harp, flute, sax, brass, organ, choir, a cappella, rap, 808/drum machine, orchestral), " +
+      "mood (sad/melancholic, dark/eerie, angry, ambient, happy/upbeat, chill/relaxed), " +
+      "character (acoustic, instrumental, with vocals, energetic, soft, danceable), tempo " +
+      "(slow <= 95 BPM, mid-tempo, fast >= 125 BPM — applied as filters) and any catalog genre. " +
+      "Sound words are scored from audio analysis, not titles; every word has to hold. " +
+      "`description.understood` shows how each word was read and `ignored_words` lists words " +
+      "that were NOT used. Each result has `match` (0-1) and a per-word `matched` breakdown. " +
+      "Costs 1 unit.",
+    inputSchema: {
+      q: z.string().min(2).max(300).describe("The description, e.g. 'melancholic piano, slow'"),
+      genre: z.string().min(1).max(500).optional().describe("Optional: only these catalog genres (comma list)"),
+      key: z.string().min(1).max(300).optional().describe("Optional: only these keys — Camelot ('8A'), Open Key ('1m') or names"),
+      min_year: z.number().int().min(1000).max(2100).optional().describe("Optional: earliest release year"),
+      max_year: z.number().int().min(1000).max(2100).optional().describe("Optional: latest release year"),
+      min: z.record(z.string(), z.number()).optional().describe(`Optional HARD lower bounds, e.g. {tempo:120}. Attributes: ${TUNABLE_ATTRIBUTES.join(", ")}`),
+      max: z.record(z.string(), z.number()).optional().describe("Optional HARD upper bounds, e.g. {tempo:128}"),
+      limit: z.number().int().min(1).max(50).default(20).describe("Tracks per page (default 20)"),
+      offset: z.number().int().min(0).max(499).default(0).describe("Skip this many tracks (offset + limit <= 500)"),
+    },
+  },
+  async (a) => {
+    const { limit = 20, offset = 0 } = a;
+    if (offset + limit > 500) {
+      return text('{"error":"offset + limit may not exceed 500 — add words or filters to narrow it."}');
+    }
+    const params = new URLSearchParams({ q: a.q, limit: String(limit), offset: String(offset) });
+    for (const k of ["genre", "key", "min_year", "max_year"]) {
+      if (a[k] !== undefined && a[k] !== null) params.set(k, String(a[k]));
+    }
+    for (const [prefix, obj] of [["min", a.min], ["max", a.max]]) {
+      for (const [attr, value] of Object.entries(obj || {})) {
+        if (!TUNABLE_ATTRIBUTES.includes(attr)) {
+          return text(JSON.stringify({ error: `${prefix}.${attr} is not a filterable attribute — it would be ignored.`, supported: TUNABLE_ATTRIBUTES }));
+        }
+        params.set(`${prefix}_${attr}`, String(value));
+      }
+    }
+    return text(await apiGet(`/search/description?${params}`));
   }
 );
 
@@ -1155,4 +1207,4 @@ server.registerTool(
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-process.stderr.write(`[music-metadata-mcp] Server running on stdio (v${PKG_VERSION} — 24 tools)\n`);
+process.stderr.write(`[music-metadata-mcp] Server running on stdio (v${PKG_VERSION} — 25 tools)\n`);
