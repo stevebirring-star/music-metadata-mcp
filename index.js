@@ -943,9 +943,10 @@ server.registerTool(
     annotations: { title: "Get Recommendations", readOnlyHint: true, openWorldHint: true },
     description:
       "Recommended tracks for one or more seed tracks — the drop-in for Spotify's removed " +
-      "GET /v1/recommendations. Blend up to 5 catalog seed tracks into a single point in " +
-      "audio-feature space and return the nearest catalogue tracks, RE-RANKED by genre affinity " +
-      "(so a feature-close cross-genre track doesn't outrank same-genre picks). Returns `seeds` " +
+      "GET /v1/recommendations. Takes up to 5 catalog seed tracks and returns catalogue tracks " +
+      "that sound like the set as a whole — ranked on the same similarity as find_similar_tracks " +
+      "(mainly a PANNs audio embedding, blended with audio features), RE-RANKED by genre affinity " +
+      "(so a close-sounding cross-genre track doesn't outrank same-genre picks). Returns `seeds` " +
       "(each {id, found}), `count`, and `tracks` (each {track, score, genre_relation}; track " +
       "carries its genre). `genre_relation` is 'same', 'compatible' (different but mixable " +
       "family), 'cross' (unrelated), or 'unknown' (either side has no mapped genre), measured " +
@@ -956,8 +957,9 @@ server.registerTool(
       "ranking considers ALL of them while the label stays relative to your primary seed, so a " +
       "'cross' label on a multi-seed call does NOT mean the track was pushed down — it may share " +
       "a family with another of your seeds. " +
-      "`score` is the raw audio-feature cosine similarity in [0,1]; genre affinity influences " +
-      "ORDER, not the score, so the list is NOT strictly score-descending. Use cross_genre=strict " +
+      "`score` is the similarity to the seed set (the same blended similarity find_similar_tracks " +
+      "returns); genre affinity and target preferences influence ORDER, not the score, so the list " +
+      "is NOT strictly score-descending. Use cross_genre=strict " +
       "to return same-genre-family tracks ONLY (off-genre dropped server-side), or allow to " +
       "disable the genre ranking. seed_tracks are catalog itunes_track_ids " +
       "(e.g. 'apple_ad1829eeccb70f9a') from search_tracks or any lookup_track response. " +
