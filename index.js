@@ -634,8 +634,13 @@ server.registerTool(
       "total, instead of track_id. blend='all' (default) ranks by mean similarity to every seed — " +
       "tracks that sound like the set; blend='any' ranks by the closest seed and interleaves so " +
       "every seed is represented. Each result then carries `matched_seed` (the seed it is closest " +
-      "to) and the response lists `seeds` used and `seeds_missing`. Costs 1 unit however many " +
-      "seeds. PANNs (Kong et al., 2020) is used under CC BY 4.0.",
+      "to) and the response lists `seeds` used and `seeds_missing`. FILTERS (same as " +
+      "discover_tracks): min/max bounds ({tempo:120} etc.), key (+harmonic, mode), genre " +
+      "(+include_subgenres), min_year/max_year, explicit, charted, min_chart_peak — results are " +
+      "the closest-sounding tracks that pass every filter, and `filters.dropped_by` says how many " +
+      "each removed. e.g. 'like these, but 120-128 BPM in 8A'. No `target` here (use " +
+      "get_recommendations). Costs 1 unit however many seeds. PANNs (Kong et al., 2020) is used " +
+      "under CC BY 4.0.",
     inputSchema: {
       track_id: z.string().min(1).max(80).optional().describe("Seed track id (catalog itunes_track_id). Omit when using seed_tracks / seed_isrcs"),
       seed_tracks: z.array(z.string().min(1).max(80)).min(1).max(10).optional().describe("Several seeds: catalog itunes_track_ids (up to 10 together with seed_isrcs)"),
@@ -645,9 +650,22 @@ server.registerTool(
       exclude_same_artist: z.boolean().default(false).describe("Drop tracks by the seed's artist"),
       cross_genre: z.enum(["auto", "allow", "strict"]).default("auto")
         .describe("Genre handling: auto (default, mixable lane), allow (genre-blind), strict (same genre family only)"),
+      min: z.record(z.string(), z.number()).optional().describe(`Filter: HARD lower bounds, e.g. {tempo:120, energy:0.6}. Attributes: ${TUNABLE_ATTRIBUTES.join(", ")}`),
+      max: z.record(z.string(), z.number()).optional().describe("Filter: HARD upper bounds, e.g. {tempo:128}. Same attributes as `min`"),
+      tempo_match: z.enum(["exact", "half_double"]).optional().describe("With a tempo bound: 'half_double' also matches double/half the range"),
+      key: z.string().min(1).max(300).optional().describe("Filter: comma list of keys — Camelot ('8A'), Open Key ('1m') or names ('A minor')"),
+      harmonic: z.boolean().optional().describe("Widen each key to its harmonically compatible keys"),
+      mode: z.enum(["major", "minor"]).optional().describe("Filter: only major or only minor keys"),
+      genre: z.string().min(1).max(500).optional().describe("Filter: comma list of catalog genre names (see list_genres)"),
+      include_subgenres: z.boolean().optional().describe("Also match every subgenre of a top-level genre"),
+      min_year: z.number().int().min(1000).max(2100).optional().describe("Filter: earliest release year"),
+      max_year: z.number().int().min(1000).max(2100).optional().describe("Filter: latest release year"),
+      explicit: z.boolean().optional().describe("Filter: true = explicit only, false = non-explicit only"),
+      charted: z.boolean().optional().describe("Filter: true = only tracks with a known chart placement"),
+      min_chart_peak: z.number().int().min(1).max(100).optional().describe("Filter: best chart position required, as chart_peak (100 = a number one)"),
     },
   },
-  async ({ track_id, seed_tracks, seed_isrcs, blend = "all", limit = 10, exclude_same_artist = false, cross_genre = "auto" }) => {
+  async ({ track_id, seed_tracks, seed_isrcs, blend = "all", limit = 10, exclude_same_artist = false, cross_genre = "auto", ...filters }) => {
     const multi = (seed_tracks && seed_tracks.length) || (seed_isrcs && seed_isrcs.length);
     if (multi && track_id) {
       return text('{"error":"Pass either track_id (one seed) or seed_tracks / seed_isrcs (several), not both."}');
@@ -667,6 +685,21 @@ server.registerTool(
       params.set("blend", blend);
     } else {
       params.set("track_id", track_id);
+    }
+    for (const k of ["tempo_match", "key", "harmonic", "mode", "genre", "include_subgenres",
+                     "min_year", "max_year", "explicit", "charted", "min_chart_peak"]) {
+      if (filters[k] !== undefined && filters[k] !== null) params.set(k, String(filters[k]));
+    }
+    for (const [prefix, obj] of [["min", filters.min], ["max", filters.max]]) {
+      for (const [attr, value] of Object.entries(obj || {})) {
+        if (!TUNABLE_ATTRIBUTES.includes(attr)) {
+          return text(JSON.stringify({
+            error: `${prefix}.${attr} is not a filterable attribute — it would be ignored.`,
+            supported: TUNABLE_ATTRIBUTES,
+          }));
+        }
+        params.set(`${prefix}_${attr}`, String(value));
+      }
     }
     return text(await apiGet(`/similar?${params}`));
   }
