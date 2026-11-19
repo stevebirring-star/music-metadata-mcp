@@ -247,14 +247,17 @@ server.registerTool(
     const [key, value] = supplied[0];
     const params = new URLSearchParams({ [key]: String(value) });
     if (key === "track" && artist) params.set("artist", artist);
-    // Auto-inline on a name miss: hold the request for the on-demand ingest and get
-    // the analysed track back in THIS call (HTTP 200) instead of a 202 the model would
-    // have to re-poll. Only `track` misses queue an ingest, so only they benefit; the
-    // API caps the wait at 25s (< its 30s gateway timeout), returns a terminal 404 if it
-    // decides mid-wait that the track has no analysable audio (2026-07-30 — so the model
-    // stops instead of re-polling a verdict that won't change), and falls back to a 202 if
-    // the ingest isn't ready in time. (isrc/mbid/spotify_id 404 on miss — no wait.)
-    if (key === "track") params.set("wait", "25");
+    // Auto-inline on a miss: hold the request for the on-demand ingest and get the
+    // analysed track back in THIS call (HTTP 200) instead of a 202 the model would have
+    // to re-poll. `track` AND `isrc` misses queue an ingest (/lookup?isrc= resolves the
+    // recording to a name and queues it; its wait loop polls that name with a version
+    // check) — until 2.20.3 only `track` got the wait, so an ISRC miss came back as
+    // "queued, retry". The API caps the wait at 25s (< its 30s gateway timeout), returns a
+    // terminal 404 if it decides mid-wait that the track has no analysable audio
+    // (2026-07-30 — so the model stops instead of re-polling a verdict that won't change),
+    // and falls back to a 202 if the ingest isn't ready in time. (mbid/spotify_id still
+    // 404 on miss — no ingest, so no wait.)
+    if (key === "track" || key === "isrc") params.set("wait", "25");
     return text(await apiGet(`/lookup?${params}`));
   }
 );
