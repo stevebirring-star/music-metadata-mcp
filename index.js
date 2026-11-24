@@ -559,7 +559,8 @@ server.registerTool(
       "placement and audio-feature ranges in one call — e.g. house at 122-126 BPM in 8A or its " +
       "neighbours with energy above 0.7: min={tempo:122, energy:0.7}, max={tempo:126}, key='8A', " +
       "harmonic=true, genre='house'. At least one narrowing filter is required (a tempo/feature " +
-      "bound, key, mode, genre, year or chart). tempo_match='half_double' also matches double/half " +
+      "bound, key, mode, genre, year, release date or chart). sort='newest'/'oldest' order by full " +
+      "release date; released_after + sort='newest' gives a genre's latest releases. tempo_match='half_double' also matches double/half " +
       "the tempo range (an 87 BPM track for a 174 BPM set). Returns `results` (one per recording, " +
       "each with bpm, camelot, energy, danceability, valence, acousticness, loudness_db + catalog " +
       "metadata), `total_matches` (exact up to 1,000), `next_offset`, and `filters` — what applied " +
@@ -579,10 +580,12 @@ server.registerTool(
       include_subgenres: z.boolean().default(false).describe("Also match every subgenre of a top-level genre"),
       min_year: z.number().int().min(1000).max(2100).optional().describe("Earliest release year"),
       max_year: z.number().int().min(1000).max(2100).optional().describe("Latest release year"),
+      released_after: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Only tracks released on or after this date (YYYY-MM-DD, inclusive), e.g. a genre's last 30 days. A track dated only to a year or month is left out unless that whole period qualifies"),
+      released_before: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Only tracks released on or before this date (YYYY-MM-DD, inclusive)"),
       explicit: z.boolean().optional().describe("true = explicit only, false = non-explicit only; omit for either"),
       charted: z.boolean().optional().describe("true = only tracks with a known chart placement (about 4% of tracks)"),
       min_chart_peak: z.number().int().min(1).max(100).optional().describe("Best chart position required, as chart_peak (100 = a number one)"),
-      sort: z.enum(["chart", "newest", "oldest", "tempo", "-tempo", "energy", "-energy", "target"]).optional().describe("Order: chart (default: charted first, then newest), newest, oldest, tempo, -tempo, energy, -energy, target (default when `target` is given)"),
+      sort: z.enum(["chart", "newest", "oldest", "tempo", "-tempo", "energy", "-energy", "target"]).optional().describe("Order: chart (default: charted first, then newest), newest, oldest (by full release date, undated last), tempo, -tempo, energy, -energy, target (default when `target` is given)"),
       limit: z.number().int().min(1).max(50).default(20).describe("Tracks per page (default 20)"),
       offset: z.number().int().min(0).max(499).default(0).describe("Skip this many tracks (offset + limit <= 500)"),
     },
@@ -595,7 +598,7 @@ server.registerTool(
     const params = new URLSearchParams({ limit: String(limit), offset: String(offset),
       tempo_match: a.tempo_match || "exact", harmonic: String(!!a.harmonic),
       include_subgenres: String(!!a.include_subgenres) });
-    for (const k of ["key", "mode", "genre", "min_year", "max_year", "explicit", "charted", "min_chart_peak", "sort"]) {
+    for (const k of ["key", "mode", "genre", "min_year", "max_year", "released_after", "released_before", "explicit", "charted", "min_chart_peak", "sort"]) {
       if (a[k] !== undefined && a[k] !== null) params.set(k, String(a[k]));
     }
     for (const [prefix, obj] of [["min", min], ["max", max], ["target", target]]) {
@@ -638,6 +641,8 @@ server.registerTool(
       key: z.string().min(1).max(300).optional().describe("Optional: only these keys — Camelot ('8A'), Open Key ('1m') or names"),
       min_year: z.number().int().min(1000).max(2100).optional().describe("Optional: earliest release year"),
       max_year: z.number().int().min(1000).max(2100).optional().describe("Optional: latest release year"),
+      released_after: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Optional: released on or after this date (YYYY-MM-DD, inclusive)"),
+      released_before: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Optional: released on or before this date (YYYY-MM-DD, inclusive)"),
       min: z.record(z.string(), z.number()).optional().describe(`Optional HARD lower bounds, e.g. {tempo:120}. Attributes: ${TUNABLE_ATTRIBUTES.join(", ")}`),
       max: z.record(z.string(), z.number()).optional().describe("Optional HARD upper bounds, e.g. {tempo:128}"),
       limit: z.number().int().min(1).max(50).default(20).describe("Tracks per page (default 20)"),
@@ -650,7 +655,7 @@ server.registerTool(
       return text('{"error":"offset + limit may not exceed 500 — add words or filters to narrow it."}');
     }
     const params = new URLSearchParams({ q: a.q, limit: String(limit), offset: String(offset) });
-    for (const k of ["genre", "key", "min_year", "max_year"]) {
+    for (const k of ["genre", "key", "min_year", "max_year", "released_after", "released_before"]) {
       if (a[k] !== undefined && a[k] !== null) params.set(k, String(a[k]));
     }
     for (const [prefix, obj] of [["min", a.min], ["max", a.max]]) {
@@ -693,7 +698,8 @@ server.registerTool(
       "every seed is represented. Each result then carries `matched_seed` (the seed it is closest " +
       "to) and the response lists `seeds` used and `seeds_missing`. FILTERS (same as " +
       "discover_tracks): min/max bounds ({tempo:120} etc.), key (+harmonic, mode), genre " +
-      "(+include_subgenres), min_year/max_year, explicit, charted, min_chart_peak — results are " +
+      "(+include_subgenres), min_year/max_year, released_after/released_before, explicit, charted, " +
+      "min_chart_peak — results are " +
       "the closest-sounding tracks that pass every filter, and `filters.dropped_by` says how many " +
       "each removed. e.g. 'like these, but 120-128 BPM in 8A'. No `target` here (use " +
       "get_recommendations). Costs 1 unit however many seeds. PANNs (Kong et al., 2020) is used " +
@@ -717,6 +723,8 @@ server.registerTool(
       include_subgenres: z.boolean().optional().describe("Also match every subgenre of a top-level genre"),
       min_year: z.number().int().min(1000).max(2100).optional().describe("Filter: earliest release year"),
       max_year: z.number().int().min(1000).max(2100).optional().describe("Filter: latest release year"),
+      released_after: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Filter: released on or after this date (YYYY-MM-DD, inclusive)"),
+      released_before: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Filter: released on or before this date (YYYY-MM-DD, inclusive)"),
       explicit: z.boolean().optional().describe("Filter: true = explicit only, false = non-explicit only"),
       charted: z.boolean().optional().describe("Filter: true = only tracks with a known chart placement"),
       min_chart_peak: z.number().int().min(1).max(100).optional().describe("Filter: best chart position required, as chart_peak (100 = a number one)"),
@@ -744,7 +752,8 @@ server.registerTool(
       params.set("track_id", track_id);
     }
     for (const k of ["tempo_match", "key", "harmonic", "mode", "genre", "include_subgenres",
-                     "min_year", "max_year", "explicit", "charted", "min_chart_peak"]) {
+                     "min_year", "max_year", "released_after", "released_before",
+                     "explicit", "charted", "min_chart_peak"]) {
       if (filters[k] !== undefined && filters[k] !== null) params.set(k, String(filters[k]));
     }
     for (const [prefix, obj] of [["min", filters.min], ["max", filters.max]]) {

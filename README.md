@@ -4,7 +4,7 @@ MCP server for the [FreqBlog Music API](https://freqblog.com/?utm_source=github&
 
 Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio features, build harmonic playlists, check lyrics availability, render waveforms, and export DJ-ready files. For reliable, full-catalog results, identify tracks by **name** (+ optional artist) or **ISRC** — a track name alone works, no Spotify account or ISRC needed. MusicBrainz IDs are also accepted. A raw **Spotify track ID** works too — resolved per request by reading the track's title from Spotify's public embed page and matching it against our catalogue (we store no Spotify IDs; a resolution is remembered in memory for at most 24h) — but a title several artists share is ambiguous and misses rather than guessing, so it is not a universal Spotify-ID reverse lookup: prefer name or ISRC.
 
-## Tools (v2.20.3 — 25 total)
+## Tools (v2.21.0 — 25 total)
 
 ### Core lookup
 | Tool | Description |
@@ -14,7 +14,7 @@ Lets Claude, Cursor, Windsurf, and any MCP-compatible AI assistant look up audio
 | `bulk_lookup` | Look up up to 50 tracks (by name or ISRC) in one request |
 | `find_tracks_by_bpm` | Find tracks within ±tolerance of a target BPM |
 | `find_tracks_by_key` | Find tracks by key — Camelot (8A), Open Key (1m), or name (A-Minor) |
-| `discover_tracks` | Find tracks by criteria, no seed needed: tempo (incl. half/double time), key (+ harmonic neighbours, mode), genre, release year, chart placement, explicit, and `min`/`max`/`target` over the audio features. Results reach 500 deep per query. Costs 1 unit |
+| `discover_tracks` | Find tracks by criteria, no seed needed: tempo (incl. half/double time), key (+ harmonic neighbours, mode), genre, release year or date range (`released_after`/`released_before`), chart placement, explicit, and `min`/`max`/`target` over the audio features; sort by chart, newest, oldest, tempo or energy. Results reach 500 deep per query. Costs 1 unit |
 
 > **About the values (2026-09-27):** audio features are FreqBlog's own analysis and are **not** on Spotify's scale. `energy` (since 2026-10-12) and `valence` (since 2026-10-13) are models of how energetic / positive the preview sounds, both on our own 0–1 scales — derive thresholds from our values rather than reusing Spotify-tuned ones. `acousticness` and `danceability` come from the AcousticBrainz classifier where available, else a model that listens to the preview (built on PANNs embeddings, CC BY 4.0; rolling out since 2026-09-27). `instrumentalness` (since 2026-10-12) is a vocal-detection model's score for the 30-second preview, not the whole track. `speechiness` and `liveness` are currently `null` for catalogue tracks.
 
